@@ -14,6 +14,7 @@ int		main(int ac, char *av[]) {
 	}
 
 	// parse and validate input
+	// (ports should be between 1024 and 65535)
 	// init and run server
 
 	return 0;
