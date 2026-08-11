@@ -8,17 +8,21 @@ RESET = \033[0m
 
 NAME = ircserv
 
-CXX = g++
-CXXFLAGS = -Wall -Wextra -Werror -std=c++20
+CXX = c++
+CXXFLAGS = -Wall -Wextra -Werror -std=c++20 -I./inc
 DEPFLAGS = -MMD -MP
 
-SRCS = main.cpp
-
-DEPS = $(patsubst %.o, %.d, $(OBJS))
+SRCS = src/main.cpp \
+       src/Server.cpp \
+       src/Client.cpp \
+       src/Channel.cpp \
+       src/Parser.cpp
 
 OBJ_DIR = obj/
 
-OBJS = $(addprefix $(OBJ_DIR), $(SRCS:%.cpp=%.o))
+OBJS = $(SRCS:src/%.cpp=$(OBJ_DIR)%.o)
+
+DEPS = $(OBJS:%.o=%.d)
 
 all: $(NAME)
 
@@ -26,8 +30,8 @@ $(NAME): $(OBJS)
 	$(CXX) $(CXXFLAGS) $^ -o $@
 	@printf "$(GREEN)✓ $(NAME) built successfully!$(RESET)\n"
 
-$(OBJ_DIR)%.o: %.cpp
-	mkdir -p $(OBJ_DIR)
+$(OBJ_DIR)%.o: src/%.cpp
+	@mkdir -p $(dir $@)
 	$(CXX) $(CXXFLAGS) $(DEPFLAGS) -c $< -o $@
 	@printf "$(CYAN)  Compiled $<$(RESET)\n"
 
@@ -43,7 +47,7 @@ re: fclean all
 
 -include $(DEPS)
 
-.PHONY:	all clean fclean re
+.PHONY: all clean fclean re
 
 .SILENT:
 
