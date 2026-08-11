@@ -18,7 +18,7 @@ class Server {
 		std::uint16_t	_port{};
 		std::string		_password;
 		std::string		_hostname;
-		std::ofstream	_serverLog; // record servver events
+		std::ofstream	_serverLog; // record server events
 		id_t	_pollFd{};
 
 
@@ -30,7 +30,7 @@ class Server {
 
 		Server&		operator=(const Server&) = delete;
 
-		bool		initServer();
+		void		initServer();
 		bool		runServer();
 
 		const	std::uint16_t	getPort();

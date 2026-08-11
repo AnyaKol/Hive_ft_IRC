@@ -5,7 +5,7 @@
 #include <system_error>
 #include <cstdlib>
 
-#include "../inc/Server.hpp"
+#include "Server.hpp"
 
 int main(int ac, char *av[]) {
     
@@ -34,17 +34,20 @@ int main(int ac, char *av[]) {
     }
 
     // 5. Server Initialization
-    Server mastermind(port, std::string(password));
+    Server irc_server(port, std::string(password));
     
-    if (!mastermind.initServer()) {
-        std::cerr << "Error: Failed to setup server.\n";
+    try {
+        irc_server.initServer();
+    } catch (std::runtime_error &e) {
+        std::cerr << e.what() << std::endl;
+        std::cerr << "Error: Failed to setup server." << std::endl;
         return EXIT_FAILURE;
     }
 
-    std::cout << "Server started successfully! Listening on port " << port << "...\n";
+    std::cout << "Server started successfully! Listening on port " << port << "..." << std::endl;
 
     // 6. The Main Loop
-    /* if (!mastermind.runServer()) {
+    /* if (!irc_server.runServer()) {
         std::cerr << "Error: Server loop terminated unexpectedly.\n";
         return EXIT_FAILURE;
     }
