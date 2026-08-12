@@ -10,6 +10,7 @@
 #include <memory>
 #include <unordered_map> // pair key value dicionary (e.g socket/ client)
 #include <vector>
+#include "Client.hpp"
 
 class Server {
 
@@ -19,7 +20,10 @@ class Server {
 		std::string		_password;
 		std::string		_hostname;
 		std::ofstream	_serverLog; // record servver events
-		id_t	_pollFd{};
+
+		static bool	_signal;
+		std::vector<Client> _clients;
+		std::vector<struct pollfd> _fds;
 
 
 	public:
@@ -31,10 +35,16 @@ class Server {
 		Server&		operator=(const Server&) = delete;
 
 		bool		initServer();
-		bool		runServer();
+		void		runServer();
 
-		const	std::uint16_t	getPort();
+		std::uint16_t	getPort();
 		const	std::string&	getPassword();
 		const	std::string&	getHostname();
 
+		void	acceptClient();
+		void	receiveData(int fd);
+
+		static void	signalHandler(int sig);
+
+		void	closeAll();
 };
