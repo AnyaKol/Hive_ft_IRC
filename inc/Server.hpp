@@ -1,5 +1,7 @@
 #pragma	once
 
+#include <sys/poll.h>
+#include <sys/types.h>
 #include <iostream>
 #include <csignal>
 #include <cstdint>
@@ -12,22 +14,23 @@
 #include <vector>
 #include "Client.hpp"
 
+#define MAXLINE 1024
 class Server {
 
 	private:
-		int		_serverSocket{};
 		std::uint16_t	_port{};
 		std::string		_password;
+		int		_serverSocket{};
 		std::string		_hostname;
 		std::ofstream	_serverLog; // record servver events
 
 		static bool	_signal;
-		std::vector<Client> _clients;
-		std::vector<struct pollfd> _fds;
+		std::unordered_map<int, Client> _clients;
+		std::vector<struct pollfd> _pollfds;
 
 
 	public:
-		Server(std::uint16_t port, const std::string &password);
+		Server(std::uint16_t port, std::string &password);
 		Server() = delete;
 		Server(const Server&) = delete;
 		~Server() = default;
@@ -43,6 +46,7 @@ class Server {
 
 		void	acceptClient();
 		void	receiveData(int fd);
+		void	clearClient(int fd);
 
 		static void	signalHandler(int sig);
 

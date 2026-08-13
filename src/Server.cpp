@@ -6,6 +6,8 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <unistd.h>
+#include <stdlib.h>
+#include <string.h>
 
 bool	Server::_signal = false;
 
@@ -16,7 +18,7 @@ void	Server::signalHandler(int sig) {
 	Server::_signal = true;
 }
 
-Server::Server(std::uint16_t port, const std::string& password) : _port{port}, _password{password}, _serverSocket{-1} {
+Server::Server(std::uint16_t port, std::string& password) : _port{port}, _password{password}, _serverSocket{-1} {
 
 }
 
@@ -67,7 +69,8 @@ bool	Server::initServer() {
 
 	server_pollfd.fd = this->_serverSocket;
 	server_pollfd.events = POLLIN; // set the event to listen for incoming data (POLLIN)
-	this->_fds.push_back(server_pollfd);
+	server_pollfd.revents = 0;
+	this->_pollfds.push_back(server_pollfd);
 
 	return true;
 
@@ -77,18 +80,26 @@ void Server::runServer() {
 
     while (!_signal) { // while the server is running and no signal has been received
 
-       	if (poll(&_fds[0], _fds.size(), -1) == -1) // -1 = block until an event occur
-			throw std::runtime_error("Poll failed");
+       	if (poll(&_pollfds[0], _pollfds.size(), -1) == -1) { // -1 = block until an event occur
+			if (!_signal) {
+				std::cerr << "Error: Poll failed!" << std::endl;
+			}
+			break;
+		}
 
-        for (size_t i = 0; i < _fds.size(); i++) { // check all our sockets to see who has the event
+        for (size_t i = 0; i < _pollfds.size(); i++) { // check all our sockets to see who has the event
 
-            if (_fds[i].revents & POLLIN) { // checks if the POLLIN event is returned
+            if (_pollfds[i].revents & POLLIN) { // checks if the POLLIN read event is ready
 
-                if (_fds[i].fd == _serverSocket) { // the event is from the server socket, meaning new client is connecting
+                if (_pollfds[i].fd == _serverSocket) { // the event is from the server socket, meaning new client is connecting
 					acceptClient(); // -> Call accept(), make it non-blocking, and push to 'fds' vector
                 } else {
                     // else then the event is from the client socket (They sent us an IRC command!)
-					receiveData(_fds[i].fd); // -> Call recv() to read the message and parse it
+					size_t current_size = _pollfds.size();
+					receiveData(_pollfds[i].fd); // -> Call recv() to read the message and parse it
+					if (_pollfds.size() < current_size) {
+						i--; // Decrement i so we don't skip the element that just shifted left from clearClient.
+					}
                 }
             }
         }
@@ -96,14 +107,74 @@ void Server::runServer() {
 	closeAll();
 }
 
+void	Server::acceptClient() {
+
+	struct	sockaddr_in	clientAddress{};
+	struct 	pollfd		client_pollfd{};
+	int		clientFd{};
+	char	clientIP[INET_ADDRSTRLEN + 1];
+	socklen_t	len = sizeof(clientAddress);
+
+	if ((clientFd = accept(this->_serverSocket, (sockaddr*)&clientAddress, &len)) == -1) {
+		std::cerr << "Error: Can't accept the new client!" << std::endl;
+		return;
+	}
+
+	Client	newClient(*this, clientFd);
+
+	if (fcntl(clientFd, F_SETFL, O_NONBLOCK) == -1) {
+		std::cerr << "Error: Failed to set socket to non-blocking mode!" << std::endl;
+		close(clientFd);
+		return;
+	}
+
+	client_pollfd.fd = clientFd;
+	client_pollfd.events = POLLIN;
+	client_pollfd.revents = 0;
+
+	newClient.setIP(inet_ntop(AF_INET, &clientAddress.sin_addr, clientIP, INET_ADDRSTRLEN)); // Convert the client's IP address to a string and store it in the Client object
+	this->_clients.insert(std::make_pair(clientFd, newClient)); // Add the new client to the hash map using their fd as the key
+	this->_pollfds.push_back(client_pollfd);
+
+	// log that the client is connected..
+
+}
+
+void	Server::receiveData(int fd) {
+
+	char	buffer[MAXLINE] {};
+
+	ssize_t received_data = recv(fd, buffer, MAXLINE -1, 0);
+	if (received_data <= 0) {
+		clearClient(fd);
+		return;
+	}
+
+	// parse the data and process it.
+}
+
+void Server::clearClient(int fd) {
+
+	for (std::vector<struct pollfd>::iterator it = _pollfds.begin(); it != _pollfds.end(); ++it) {
+		if (it->fd == fd) {
+			_pollfds.erase(it); // careful with erase it shift to the left.. need tto keep track of correct num of clients
+			break;
+		}
+	}
+
+	_clients.erase(fd); // O(1) instant removal from the hash map!
+
+	close(fd);
+	std::cout << "Client (FD " << fd << ") disconnected." << std::endl;
+}
+
 void	Server::closeAll() {
 
-	for (Client &client : _clients) { // need to also clear the client contianer later..
-		close(client.getFd());
+	for (std::unordered_map<int, Client>::iterator it = _clients.begin(); it != _clients.end(); ++it) {
+		close(it->second.getFd()); // first is the fd key, second is the client obj
 	}
 	if (-1 != _serverSocket) {
 		close (_serverSocket);
 	}
 }
-
 
