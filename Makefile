@@ -14,9 +14,9 @@ DEPFLAGS = -MMD -MP
 
 SRCS = src/main.cpp \
        src/Server.cpp \
-       src/Client.cpp \
-       src/Channel.cpp \
-       src/Parser.cpp
+       src/Parser.cpp \
+       src/Client.cpp
+#        src/Channel.cpp \
 
 OBJ_DIR = obj/
 

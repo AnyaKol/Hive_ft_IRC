@@ -2,33 +2,40 @@
 
 #include <string>
 #include <string_view>
-#include "Server.hpp"
 #include "Channel.hpp"
 
+class Server;
 class Client {
 
 	private:
+		Server&		_server;
 		std::string	_username;
 		std::string	_nickname;
 		std::string	_hostname;
 		std::string	_password;
-		int			_socket;
+		std::string _buffer; // to store client input data and append to it / partial data
+		std::string	_ipAddress;
+		int			_socketFd;
 
 	public:
-		Client() = delete;
-		Client(const Client&) = delete;
+		Client() = default;
+		Client(const Client&) = default;
 		Client(Server& server, int socket);
 		~Client() = default;
 
-		Client&		operator=(const Client&) = delete;
+		Client&		operator=(const Client&) = default;
 
 		const	std::string&	getUsername() const;
 		const	std::string&	getNickname() const;
 		const	std::string&	getHostname() const;
+		const	std::string&	getIP() const;
+		int		getFd()	const;
 
-		void	setUsername(std::string_view username);
-		void	setNickname(std::string_view nickname);
-		void	setHostname(std::string_view hostname);
+		void	setFd(int fd);
+		void	setIP(const std::string& ip);
+		void	setUsername(const std::string_view username);
+		void	setNickname(const std::string_view nickname);
+		void	setHostname(const std::string_view hostname);
 
 		void	joinChannel();
 		void	leaveChannel();
