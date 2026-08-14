@@ -20,9 +20,9 @@ class Server {
 	private:
 		std::uint16_t	_port{};
 		std::string		_password;
-		int		_serverSocket{};
+		int				_serverSocket{};
 		std::string		_hostname;
-		std::ofstream	_serverLog; // record servver events
+		std::ofstream	_serverLog; // record server events
 
 		static bool	_signal;
 		std::unordered_map<int, Client> _clients;

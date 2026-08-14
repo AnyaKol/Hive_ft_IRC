@@ -8,15 +8,14 @@ class Server;
 class Client {
 
 	private:
+		Server&		_server;
 		std::string	_username;
 		std::string	_nickname;
 		std::string	_hostname;
 		std::string	_password;
-		std::string _buffer; // to store client input data and append to it
+		std::string _buffer; // to store client input data and append to it / partial data
 		std::string	_ipAddress;
-		int			_fd;
-		int			_socket;
-		Server&		_server;
+		int			_socketFd;
 
 	public:
 		Client() = default;
@@ -24,11 +23,12 @@ class Client {
 		Client(Server& server, int socket);
 		~Client() = default;
 
-		Client&		operator=(const Client&) = delete;
+		Client&		operator=(const Client&) = default;
 
 		const	std::string&	getUsername() const;
 		const	std::string&	getNickname() const;
 		const	std::string&	getHostname() const;
+		const	std::string&	getIP() const;
 		int		getFd()	const;
 
 		void	setFd(int fd);

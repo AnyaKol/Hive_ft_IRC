@@ -18,23 +18,20 @@ void	Server::signalHandler(int sig) {
 	Server::_signal = true;
 }
 
-Server::Server(std::uint16_t port, std::string& password) : _port{port}, _password{password}, _serverSocket{-1} {
-
-}
-
+Server::Server(std::uint16_t port, std::string& password) : _port{port}, _password{password}, _serverSocket{-1} { }
 
 bool	Server::initServer() {
 
 	int	ret{};
 	struct pollfd server_pollfd;
 
-	_serverLog.open("BackLog.txt", std::ofstream::trunc); // Truncate an existing stream when opening.
+	_serverLog.open("BackLog.txt", std::ofstream::trunc);
 	if (!_serverLog.is_open()) {
 		std::cerr << "Failed to open server log file." << std::endl;
 		return false;
 	}
 
-	_serverSocket = socket(AF_INET, SOCK_STREAM, 0); // Create a TCP ipv4 socket
+	_serverSocket = socket(AF_INET, SOCK_STREAM, 0);
 	if (-1 == _serverSocket) {
 		std::cerr << "Failed to create socket." << std::endl;
 		return false;
@@ -47,28 +44,28 @@ bool	Server::initServer() {
 	}
 
 	int socketoption = true;
-	setsockopt(_serverSocket, SOL_SOCKET, SO_REUSEADDR, &socketoption, sizeof(socketoption)); // Allow reuse of local addresses, act on the socket level, and set the option to true
+	setsockopt(_serverSocket, SOL_SOCKET, SO_REUSEADDR, &socketoption, sizeof(socketoption));
 
 
 	sockaddr_in serverAddress{};
-	serverAddress.sin_addr.s_addr = INADDR_ANY; // Accept connections from any IP address
-	serverAddress.sin_family = AF_INET; // IPv4
-	serverAddress.sin_port = htons(_port); // Convert port number to network short byte order 16 bits
+	serverAddress.sin_addr.s_addr = INADDR_ANY;
+	serverAddress.sin_family = AF_INET;
+	serverAddress.sin_port = htons(_port);
 
-	ret = bind(_serverSocket, reinterpret_cast<sockaddr*>(&serverAddress), sizeof(serverAddress)); // Bind the socket to the specified address and port
+	ret = bind(_serverSocket, reinterpret_cast<sockaddr*>(&serverAddress), sizeof(serverAddress));
 	if (-1 == ret) {
 		std::cerr << "Failed to bind socket." << std::endl;
 		return false;
 	}
 
-	ret = listen(_serverSocket, SOMAXCONN); // Start listening for incoming connections
+	ret = listen(_serverSocket, SOMAXCONN);
 	if (-1 == ret) {
 		std::cerr << "Failed to listen on socket." << std::endl;
 		return false;
 	}
 
 	server_pollfd.fd = this->_serverSocket;
-	server_pollfd.events = POLLIN; // set the event to listen for incoming data (POLLIN)
+	server_pollfd.events = POLLIN;
 	server_pollfd.revents = 0;
 	this->_pollfds.push_back(server_pollfd);
 
@@ -78,25 +75,25 @@ bool	Server::initServer() {
 
 void Server::runServer() {
 
-    while (!_signal) { // while the server is running and no signal has been received
+    while (!_signal) {
 
-       	if (poll(&_pollfds[0], _pollfds.size(), -1) == -1) { // -1 = block until an event occur
+       	if (poll(&_pollfds[0], _pollfds.size(), -1) == -1) { // block until an event occur
 			if (!_signal) {
 				std::cerr << "Error: Poll failed!" << std::endl;
 			}
 			break;
 		}
 
-        for (size_t i = 0; i < _pollfds.size(); i++) { // check all our sockets to see who has the event
+        for (size_t i = 0; i < _pollfds.size(); i++) {
 
             if (_pollfds[i].revents & POLLIN) { // checks if the POLLIN read event is ready
 
                 if (_pollfds[i].fd == _serverSocket) { // the event is from the server socket, meaning new client is connecting
-					acceptClient(); // -> Call accept(), make it non-blocking, and push to 'fds' vector
+					acceptClient();
                 } else {
                     // else then the event is from the client socket (They sent us an IRC command!)
 					size_t current_size = _pollfds.size();
-					receiveData(_pollfds[i].fd); // -> Call recv() to read the message and parse it
+					receiveData(_pollfds[i].fd);
 					if (_pollfds.size() < current_size) {
 						i--; // Decrement i so we don't skip the element that just shifted left from clearClient.
 					}
@@ -115,7 +112,7 @@ void	Server::acceptClient() {
 	char	clientIP[INET_ADDRSTRLEN + 1];
 	socklen_t	len = sizeof(clientAddress);
 
-	if ((clientFd = accept(this->_serverSocket, (sockaddr*)&clientAddress, &len)) == -1) {
+	if ((clientFd = accept(this->_serverSocket, reinterpret_cast<sockaddr*>(&clientAddress), &len)) == -1) {
 		std::cerr << "Error: Can't accept the new client!" << std::endl;
 		return;
 	}
@@ -132,11 +129,18 @@ void	Server::acceptClient() {
 	client_pollfd.events = POLLIN;
 	client_pollfd.revents = 0;
 
-	newClient.setIP(inet_ntop(AF_INET, &clientAddress.sin_addr, clientIP, INET_ADDRSTRLEN)); // Convert the client's IP address to a string and store it in the Client object
+	if (inet_ntop(AF_INET, &clientAddress.sin_addr, clientIP, INET_ADDRSTRLEN))
+		newClient.setIP(clientIP);
+	else {
+		std::cerr << "Error: Failed to convert client IP address!" << std::endl;
+		close(clientFd);
+		return;
+	}
+
 	this->_clients.insert(std::make_pair(clientFd, newClient)); // Add the new client to the hash map using their fd as the key
 	this->_pollfds.push_back(client_pollfd);
 
-	// log that the client is connected..
+	std::cout << "Client (FD " << clientFd << ") connected from IP: " << newClient.getIP() << std::endl;
 
 }
 
@@ -157,12 +161,12 @@ void Server::clearClient(int fd) {
 
 	for (std::vector<struct pollfd>::iterator it = _pollfds.begin(); it != _pollfds.end(); ++it) {
 		if (it->fd == fd) {
-			_pollfds.erase(it); // careful with erase it shift to the left.. need tto keep track of correct num of clients
+			_pollfds.erase(it); // careful with erase it shift to the left.. need to keep track of correct num of clients
 			break;
 		}
 	}
 
-	_clients.erase(fd); // O(1) instant removal from the hash map!
+	_clients.erase(fd);
 
 	close(fd);
 	std::cout << "Client (FD " << fd << ") disconnected." << std::endl;
