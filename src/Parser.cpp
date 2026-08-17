@@ -35,8 +35,8 @@ Parser::Parser(std::string_view message) {
         std::string_view token{word.begin(), word.end()};
         
         if (!token.empty()) {
-            if (name.empty()) {
-                name = token;
+            if (command.empty()) {
+                command = token;
             } else {
                 params.push_back(token);
             }
