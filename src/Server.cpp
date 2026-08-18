@@ -18,7 +18,7 @@ void	Server::signalHandler(int sig) {
 	Server::_signal = true;
 }
 
-Server::Server(std::uint16_t port, std::string& password) : _port{port}, _password{password}, _serverSocket{-1} { }
+Server::Server(std::uint16_t port, const std::string& password) : _port{port}, _password{password}, _serverSocket{-1} { }
 
 bool	Server::initServer() {
 
