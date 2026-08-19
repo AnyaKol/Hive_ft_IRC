@@ -15,6 +15,7 @@ int main(int ac, char *av[]) {
         return EXIT_FAILURE;
     }
 
+    // maybe we can do the input validation in one helper function to make main cleaner.
     std::string password{av[2]};
     if (password.empty()) {
         std::cerr << "Error: Password cannot be empty!\n";
@@ -31,7 +32,9 @@ int main(int ac, char *av[]) {
     }
 
     Server  server(port, password);
-    try { // still need to handle signals
+    try {
+        signal(SIGINT, Server::signalHandler);
+        signal(SIGQUIT, Server::signalHandler);
         if (server.initServer()) {
         std::cout << "Server initialized successfully, waiting for connections..\n";
         server.runServer();
