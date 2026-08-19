@@ -38,10 +38,9 @@ void	Server::initServer() {
 		throw ( std::runtime_error("Failed to set socket to non-blocking mode.") );
 
 	int socketoption = 1;
-	ret = setsockopt(this->_serverSocket, SOL_SOCKET, SO_REUSEADDR, &socketoption, sizeof(socketoption)); // Allow reuse of local addresses, act on the socket level, and set the option to true
+	ret = setsockopt(this->_serverSocket, SOL_SOCKET, SO_REUSEADDR, &socketoption, sizeof(socketoption));
 	if (-1 == ret)
 		throw ( std::runtime_error("Failed to set option to reuse local addresses.") );
-
 
 	sockaddr_in serverAddress{};
 	serverAddress.sin_addr.s_addr = INADDR_ANY; // Accept connections from any IP address
