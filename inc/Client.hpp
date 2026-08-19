@@ -2,9 +2,9 @@
 
 #include <string>
 #include <string_view>
-#include "Server.hpp"
 #include "Channel.hpp"
 
+class Server;
 class Client {
 
 	private:
@@ -13,12 +13,14 @@ class Client {
 		std::string	_hostname;
 		std::string	_password;
 		std::string _buffer; // to store client input data and append to it
+		std::string	_ipAddress;
 		int			_fd;
 		int			_socket;
+		Server&		_server;
 
 	public:
-		Client() = delete;
-		Client(const Client&) = delete;
+		Client() = default;
+		Client(const Client&) = default;
 		Client(Server& server, int socket);
 		~Client() = default;
 
@@ -30,9 +32,10 @@ class Client {
 		int		getFd()	const;
 
 		void	setFd(int fd);
-		void	setUsername(std::string_view username);
-		void	setNickname(std::string_view nickname);
-		void	setHostname(std::string_view hostname);
+		void	setIP(const std::string& ip);
+		void	setUsername(const std::string_view username);
+		void	setNickname(const std::string_view nickname);
+		void	setHostname(const std::string_view hostname);
 
 		void	joinChannel();
 		void	leaveChannel();
