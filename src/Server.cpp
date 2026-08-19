@@ -8,6 +8,8 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
+#include <Parser.hpp>
+#include <Commands.hpp>
 
 bool	Server::_signal = false;
 
@@ -117,7 +119,7 @@ void	Server::acceptClient() {
 		return;
 	}
 
-	Client	newClient(*this, clientFd);
+	Client	newClient(clientFd);
 
 	if (fcntl(clientFd, F_SETFL, O_NONBLOCK) == -1) {
 		std::cerr << "Error: Failed to set socket to non-blocking mode!" << std::endl;
@@ -155,6 +157,14 @@ void	Server::receiveData(int fd) {
 	}
 
 	// parse the data and process it.
+	_clients[fd].appendToBuffer(buffer);
+
+	while (_clients[fd].hasCompleteCommand()) { // we can have multiple commands in the buffer, so we need to process them all
+
+		std::string command = _clients[fd].extractCommandFromBuffer();
+		Parser cmd(command);
+		Commands::processCommand(*this, _clients[fd], cmd);
+	}
 }
 
 void Server::clearClient(int fd) {
@@ -182,3 +192,7 @@ void	Server::closeAll() {
 	}
 }
 
+const std::string& Server::getPassword() {
+
+	return _password;
+}

@@ -28,20 +28,20 @@ namespace IRC
     // ==========================================
     namespace RPL
     {
-        constexpr std::string_view WELCOME         = "001";
-        constexpr std::string_view YOURHOST        = "002";
-        constexpr std::string_view CREATED         = "003";
-        constexpr std::string_view MYINFO          = "004";
-        constexpr std::string_view ISUPPORT        = "005";
+        constexpr std::string_view WELCOME         = "001"; // Client completes PASS + NICK + USER.
+        constexpr std::string_view YOURHOST        = "002"; // Server metadata.
+        constexpr std::string_view CREATED         = "003"; //
+        constexpr std::string_view MYINFO          = "004"; //
+        constexpr std::string_view ISUPPORT        = "005"; // Tells the client channel prefixes (#, &) and mode limits.
 
-        constexpr std::string_view CHANNELMODEIS   = "324";
-        constexpr std::string_view CREATIONTIME    = "329";
-        constexpr std::string_view NOTOPIC         = "331";
-        constexpr std::string_view TOPIC           = "332";
-        constexpr std::string_view TOPICWHOTIME    = "333";
-        constexpr std::string_view INVITING        = "341";
-        constexpr std::string_view NAMREPLY        = "353";
-        constexpr std::string_view ENDOFNAMES      = "366";
+        constexpr std::string_view CHANNELMODEIS   = "324"; // Sent in response to MODE <channel> command, shows the current channel modes and their parameters.
+        constexpr std::string_view CREATIONTIME    = "329"; // Sent in response to WHOIS <nick> command, shows the channel creation time.
+        constexpr std::string_view NOTOPIC         = "331"; // Sent in response to TOPIC <channel> command, indicates that the channel has no topic set.
+        constexpr std::string_view TOPIC           = "332"; // Sent in response to TOPIC <channel> command, shows the current topic of the channel.
+        constexpr std::string_view TOPICWHOTIME    = "333"; // Sent in response to WHOIS <nick> command, shows the user who set the topic and the time it was set.
+        constexpr std::string_view INVITING        = "341"; // Sent in response to INVITE <nick> <channel> command, indicates that the user has been invited to the channel.
+        constexpr std::string_view NAMREPLY        = "353"; // Sent in response to NAMES <channel> command, shows the list of users in the channel.
+        constexpr std::string_view ENDOFNAMES      = "366"; // Sent in response to NAMES <channel> command, indicates the end of the names list.
     }
 
     // ==========================================
@@ -49,33 +49,33 @@ namespace IRC
     // ==========================================
     namespace ERR
     {
-        constexpr std::string_view NOSUCHNICK       = "401";
-        constexpr std::string_view NOSUCHCHANNEL    = "403";
-        constexpr std::string_view CANNOTSENDTOCHAN = "404";
-        constexpr std::string_view NOORIGIN         = "409";
-        constexpr std::string_view NORECIPIENT      = "411";
-        constexpr std::string_view NOTEXTTOSEND     = "412";
-        constexpr std::string_view UNKNOWNCOMMAND   = "421";
-        constexpr std::string_view NONICKNAMEGIVEN  = "431";
-        constexpr std::string_view ERRONEUSNICKNAME = "432";
-        constexpr std::string_view NICKNAMEINUSE    = "433";
-        constexpr std::string_view USERNOTINCHANNEL = "441";
-        constexpr std::string_view NOTONCHANNEL     = "442";
-        constexpr std::string_view USERONCHANNEL    = "443";
+        constexpr std::string_view NOSUCHNICK       = "401"; // Sent in response to a command that requires a target nick, but the specified nick does not exist.
+        constexpr std::string_view NOSUCHCHANNEL    = "403"; // Sent in response to a command that requires a target channel, but the specified channel does not exist.
+        constexpr std::string_view CANNOTSENDTOCHAN = "404"; //
+        constexpr std::string_view NOORIGIN         = "409"; // Sent in response to a command that requires an origin, but no origin is specified.
+        constexpr std::string_view NORECIPIENT      = "411"; // Sent in response to a command that requires a recipient, but no recipient is specified.
+        constexpr std::string_view NOTEXTTOSEND     = "412"; // Sent in response to a command that requires text to be sent, but no text is specified.
+        constexpr std::string_view UNKNOWNCOMMAND   = "421"; // Sent in response to a command that is not recognized by the server.
+        constexpr std::string_view NONICKNAMEGIVEN  = "431"; // Sent in response to a command that requires a nick, but no nick is specified.
+        constexpr std::string_view ERRONEUSNICKNAME = "432"; // Sent in response to a command that requires a valid nick, but the specified nick is invalid.
+        constexpr std::string_view NICKNAMEINUSE    = "433"; // Sent in response to a command that requires a unique nick, but the specified nick is already in use.
+        constexpr std::string_view USERNOTINCHANNEL = "441"; // Sent in response to a command that requires the user to be in a channel, but the user is not in the channel.
+        constexpr std::string_view NOTONCHANNEL     = "442"; //
+        constexpr std::string_view USERONCHANNEL    = "443"; // Sent in response to a command that requires the user to be in a channel, but the user is already in the channel.
 
-        constexpr std::string_view NOTREGISTERED    = "451";
-        constexpr std::string_view NEEDMOREPARAMS   = "461";
-        constexpr std::string_view ALREADYREGISTERED= "462";
-        constexpr std::string_view PASSWDMISMATCH   = "464";
-        constexpr std::string_view CHANNELISFULL    = "471";
-        constexpr std::string_view UNKNOWNMODE      = "472";
-        constexpr std::string_view INVITEONLYCHAN   = "473";
-        constexpr std::string_view BADCHANNELKEY    = "475";
-        constexpr std::string_view BADCHANMASK      = "476";
-        constexpr std::string_view CHANOPRIVSNEEDED = "482";
+        constexpr std::string_view NOTREGISTERED    = "451"; // Sent in response to a command that requires the user to be registered, but the user is not registered.
+        constexpr std::string_view NEEDMOREPARAMS   = "461"; // Sent in response to a command that requires more parameters, but not enough are specified.
+        constexpr std::string_view ALREADYREGISTERED= "462"; // Sent in response to a command that requires the user to be registered, but the user is already registered.
+        constexpr std::string_view PASSWDMISMATCH   = "464"; // Sent in response to a command that requires a password, but the specified password is incorrect.
+        constexpr std::string_view CHANNELISFULL    = "471"; // Sent in response to a command that requires the channel to be not full, but the channel is full.
+        constexpr std::string_view UNKNOWNMODE      = "472"; // Sent in response to a command that requires a known mode, but the specified mode is unknown.
+        constexpr std::string_view INVITEONLYCHAN   = "473"; // Sent in response to a command that requires the channel to be invite-only, but the user is not invited.
+        constexpr std::string_view BADCHANNELKEY    = "475"; // Sent in response to a command that requires a valid channel key, but the specified key is invalid.
+        constexpr std::string_view BADCHANMASK      = "476"; // Sent in response to a command that requires a valid channel mask, but the specified mask is invalid.
+        constexpr std::string_view CHANOPRIVSNEEDED = "482"; // Sent in response to a command that requires the user to be a channel operator, but the user is not an operator.
 
-        constexpr std::string_view INVALIDKEY       = "525";
-        constexpr std::string_view INVALIDMODEPARAM = "696";
+        constexpr std::string_view INVALIDKEY       = "525"; // Sent in response to a command that requires a valid key, but the specified key is not well-formed.
+        constexpr std::string_view INVALIDMODEPARAM = "696"; // Sent in response to a command that requires a valid mode parameter, but the specified parameter is invalid.
     }
 
     // ==========================================
