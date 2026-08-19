@@ -27,6 +27,7 @@ class Server {
 
         static bool _signal;
         std::unordered_map<int, Client> _clients;
+        std::unordered_map<std::string, Channel> _channels; // all channels on server
         std::vector<struct pollfd> _pollfds;
 
     public:
