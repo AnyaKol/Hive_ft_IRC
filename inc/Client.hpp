@@ -12,6 +12,8 @@ class Client {
 		std::string	_nickname;
 		std::string	_hostname;
 		std::string	_password;
+		std::string _buffer; // to store client input data and append to it
+		int			_fd;
 		int			_socket;
 
 	public:
@@ -25,7 +27,9 @@ class Client {
 		const	std::string&	getUsername() const;
 		const	std::string&	getNickname() const;
 		const	std::string&	getHostname() const;
+		int		getFd()	const;
 
+		void	setFd(int fd);
 		void	setUsername(std::string_view username);
 		void	setNickname(std::string_view nickname);
 		void	setHostname(std::string_view hostname);

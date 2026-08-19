@@ -7,7 +7,16 @@
 #include <netinet/in.h>
 #include <unistd.h>
 
-Server::Server(std::uint16_t port, const std::string& password) : _port{port}, _password{password}, _pollFd{-1}, _serverSocket{-1} {
+bool	Server::_signal = false;
+
+void	Server::signalHandler(int sig) {
+
+	(void)sig;
+	std::cout << "\nSignal Arrived!\n";
+	Server::_signal = true;
+}
+
+Server::Server(std::uint16_t port, const std::string& password) : _port{port}, _password{password}, _serverSocket{-1} {
 
 }
 
@@ -15,6 +24,7 @@ Server::Server(std::uint16_t port, const std::string& password) : _port{port}, _
 void	Server::initServer() {
 
 	int	ret{};
+	struct pollfd server_pollfd;
 
 	this->_serverLog.open("BackLog.txt", std::ofstream::trunc); // Truncate an existing stream when opening.
 	if (!this->_serverLog.is_open())
@@ -47,10 +57,42 @@ void	Server::initServer() {
 	if (-1 == ret)
 		throw ( std::runtime_error("Failed to listen on socket.") );
 
-	// Create a poll file descriptor for monitoring events on the server socket
-
-	// using poll or epoll or select system calls
-
-
+	server_pollfd.fd = this->_serverSocket;
+	server_pollfd.events = POLLIN; // set the event to listen for incoming data (POLLIN)
+	this->_fds.push_back(server_pollfd);
 }
+
+void Server::runServer() {
+
+    while (!_signal) { // while the server is running and no signal has been received
+
+       	if (poll(&_fds[0], _fds.size(), -1) == -1) // -1 = block until an event occur
+			throw std::runtime_error("Poll failed");
+
+        for (size_t i = 0; i < _fds.size(); i++) { // check all our sockets to see who has the event
+
+            if (_fds[i].revents & POLLIN) { // checks if the POLLIN event is returned
+
+                if (_fds[i].fd == _serverSocket) { // the event is from the server socket, meaning new client is connecting
+					acceptClient(); // -> Call accept(), make it non-blocking, and push to 'fds' vector
+                } else {
+                    // else then the event is from the client socket (They sent us an IRC command!)
+					receiveData(_fds[i].fd); // -> Call recv() to read the message and parse it
+                }
+            }
+        }
+    }
+	closeAll();
+}
+
+void	Server::closeAll() {
+
+	for (Client &client : _clients) { // need to also clear the client contianer later..
+		close(client.getFd());
+	}
+	if (-1 != _serverSocket) {
+		close (_serverSocket);
+	}
+}
+
 
