@@ -6,7 +6,7 @@
 class Parser {
 public:
     std::string_view                prefix;
-    std::string_view                name;
+    std::string_view                command;
     std::vector<std::string_view>   params;
 
     Parser(std::string_view message);
