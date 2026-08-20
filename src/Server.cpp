@@ -101,6 +101,25 @@ void Server::runServer() {
 					}
                 }
             }
+			if (_pollfds[i].revents & POLLOUT) {
+
+				if (_pollfds[i].fd != _serverSocket) {
+
+					int fd = _pollfds[i].fd;
+					const std::string& writeBuffer = _clients[fd].getWriteBuffer();
+
+					if (!writeBuffer.empty()) {
+						ssize_t	sent = send(fd, writeBuffer.c_str(), writeBuffer.length(), 0);
+						if (sent > 0)
+							_clients[fd].eraseFromWriteBuffer(sent);
+					}
+
+					if (writeBuffer.empty() && _clients[fd].shouldDisconnect()) {
+						clearClient(fd);
+						i--;
+					}
+				}
+			}
         }
     }
 	closeAll();
@@ -128,12 +147,13 @@ void	Server::acceptClient() {
 	}
 
 	client_pollfd.fd = clientFd;
-	client_pollfd.events = POLLIN;
+	client_pollfd.events = POLLIN | POLLOUT; // Client sockets need to both read (POLLIN) and write (POLLOUT)
 	client_pollfd.revents = 0;
 
-	if (inet_ntop(AF_INET, &clientAddress.sin_addr, clientIP, INET_ADDRSTRLEN))
+	if (inet_ntop(AF_INET, &clientAddress.sin_addr, clientIP, INET_ADDRSTRLEN))	{
 		newClient.setIP(clientIP);
-	else {
+		newClient.setHostname(clientIP);
+	} else {
 		std::cerr << "Error: Failed to convert client IP address!" << std::endl;
 		close(clientFd);
 		return;
@@ -157,7 +177,7 @@ void	Server::receiveData(int fd) {
 	}
 
 	// parse the data and process it.
-	_clients[fd].appendToBuffer(buffer);
+	_clients[fd].appendToReadBuffer(buffer);
 
 	while (_clients[fd].hasCompleteCommand()) { // we can have multiple commands in the buffer, so we need to process them all
 
@@ -185,7 +205,7 @@ void Server::clearClient(int fd) {
 void	Server::closeAll() {
 
 	for (std::unordered_map<int, Client>::iterator it = _clients.begin(); it != _clients.end(); ++it) {
-		close(it->second.getFd()); // first is the fd key, second is the client obj
+		close(it->second.getSocket()); // first is the fd key, second is the client obj
 	}
 	if (-1 != _serverSocket) {
 		close (_serverSocket);
@@ -196,3 +216,14 @@ const std::string& Server::getPassword() {
 
 	return _password;
 }
+
+bool Server::isNicknameTaken(const std::string_view& nickname) const {
+
+	for (const auto& pair : _clients) {
+		if (pair.second.getNickname() == nickname) {
+			return true;
+		}
+	}
+	return false;
+}
+

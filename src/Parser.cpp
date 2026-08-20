@@ -60,7 +60,7 @@ void Parser::setCommand(std::string_view command) {
         return static_cast<char>(std::toupper(c));
     });
 
-    if (_command == "PASS" || _command == "PING" || _command == "PONG" || _command == "QUIT" || _command == "NICK" || _command == "USER" || _command == "PRIVMSG" || _command == "JOIN" || _command == "PART" || _command == "TOPIC" || _command == "INVITE" || _command == "KICK" || _command == "MODE") {
+    if (_command == "PASS" || _command == "PING" || _command == "PONG" || _command == "QUIT" || _command == "NICK" || _command == "USER" || _command == "PRIVMSG" || _command == "JOIN" || _command == "PART" || _command == "TOPIC" || _command == "INVITE" || _command == "KICK" || _command == "MODE" || _command == "CAP") { // we have to whitelist the cap command as well since it is a valid command for the client to send to the server, but we don't implement it yet. If we don't whitelist it, the server will respond with an error message saying that the command is unknown.
         return;
     }
     _command = "UNKNOWN";

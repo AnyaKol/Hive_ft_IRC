@@ -8,6 +8,8 @@ namespace Commands {
 
     void processCommand(Server& serv, Client& client, Parser& cmd);
 
+    void handleNick(Server& serv, Client& client, Parser& cmd);
+    void handleUser(Server& serv, Client& client, Parser& cmd);
     void handlePass(Server& serv, Client& client, Parser& cmd);
     void handlePing(Server& serv, Client& client, Parser& cmd);
     void handlePong(Server& serv, Client& client, Parser& cmd);
