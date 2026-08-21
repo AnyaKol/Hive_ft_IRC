@@ -50,5 +50,7 @@ class Server {
 
         static void signalHandler(int sig);
 
+        bool isNicknameTaken(const std::string_view& nickname)const;
+
         void    closeAll();
 };
