@@ -9,7 +9,9 @@ class Channel{
 		std::string		_name;
 		std::string		_topic;
 		std::size_t		_maxMembers{};
-		std::vector<int> _memfds;
+
+		std::set<Client&> _memberFds;
+
 		bool			inviteOnly = false;
 
 
