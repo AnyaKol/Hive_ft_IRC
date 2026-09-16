@@ -22,13 +22,15 @@ class Client {
         bool        _isAuthenticated = false;
         bool        _shouldDisconnect = false;
 
-    public:
-        Client() = default;
-        Client(const Client&) = default;
-        Client(int socket);
+public:
+        // Changed to = delete to fix compilation error caused by Server& _server reference
+        Client() = delete;
+        Client(const Client&) = delete;
+        Client(Server& server, int socket);
         ~Client() = default;
 
-        Client&     operator=(const Client&) = default;
+        // Changed to = delete to fix compilation error caused by Server& _server reference
+        Client&     operator=(const Client&) = delete;
 
 
         const   std::string&    getRealname() const { return _realname; };
