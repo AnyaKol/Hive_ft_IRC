@@ -115,7 +115,6 @@ void    Commands::handleUser(Server& serv, Client& client, Parser& cmd) {
 
 
 
-
 // PING <token>
 void Commands::handlePing(Server& serv, Client& client, Parser& cmd) {
 
@@ -151,4 +150,49 @@ void Commands::handleQuit(Server& serv, Client& client, Parser& cmd) {
     client.appendToWriteBuffer(reply);
 
     std::cout << "Client on socket " << client.getSocket() << " is quitting: " << reason << "\n";
+}
+
+// PRIVMSG <target> <message>
+void Commands::handlePrivMsg(Server& serv, Client& client, Parser& cmd) {
+
+    // 1. Check for missing target
+    if (cmd.getParams().empty()) {
+        std::string reply = IRC::Reply::errNeedMoreParams(client.getNickname(), cmd.getCommand());
+        client.appendToWriteBuffer(reply);
+        return;
+    }
+
+    // 2. Check for missing message text
+    if (cmd.getParams().size() < 2 || cmd.getParams()[1].empty()) {
+        std::string reply = "412 " + client.getNickname() + " :No text to send\r\n";
+        client.appendToWriteBuffer(reply);
+        return;
+    }
+
+    std::string target = std::string(cmd.getParams()[0]);
+    std::string message = std::string(cmd.getParams()[1]);
+
+    // Phase 1 Block: Reject channel messages temporarily
+    if (target[0] == '#') {
+        std::string reply = "403 " + client.getNickname() + " " + target + " :No such channel\r\n";
+        client.appendToWriteBuffer(reply);
+        return;
+    }
+
+    // 3. Find the target user
+    Client* targetClient = serv.getClientByNick(target);
+
+    // 4. Handle user not found
+    if (!targetClient) {
+        std::string reply = "401 " + client.getNickname() + " " + target + " :No such nick/channel\r\n";
+        client.appendToWriteBuffer(reply);
+        return;
+    }
+
+    // 5. Forward the exact IRC string to the receiving client's buffer
+    std::string forwardMsg = ":" + client.getNickname() + "!" + client.getUsername() + 
+                             "@" + client.getHostname() + " PRIVMSG " + target + 
+                             " :" + message + "\r\n";
+                             
+    targetClient->appendToWriteBuffer(forwardMsg);
 }

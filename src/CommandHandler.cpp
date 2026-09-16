@@ -27,6 +27,7 @@ void Commands::processCommand(Server& serv, Client& client, Parser& cmd) {
     if (command == "PING") { handlePing(serv, client, cmd); return; }
     if (command == "PONG") { handlePong(serv, client, cmd); return; }
     if (command == "QUIT") { handleQuit(serv, client, cmd); return; }
+    if (command == "PRIVMSG") { handlePrivMsg(serv, client, cmd); return; }
 
 
     // Channel Commands (Add later)

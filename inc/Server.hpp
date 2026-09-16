@@ -51,6 +51,9 @@ class Server {
         static void signalHandler(int sig);
 
         bool isNicknameTaken(const std::string_view& nickname)const;
+        
+        // ADDED FOR PRIVMSG LOOKUP
+        Client* getClientByNick(const std::string& nickname);
 
         void    closeAll();
 };

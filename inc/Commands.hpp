@@ -14,5 +14,6 @@ namespace Commands {
     void handlePing(Server& serv, Client& client, Parser& cmd);
     void handlePong(Server& serv, Client& client, Parser& cmd);
     void handleQuit(Server& serv, Client& client, Parser& cmd);
+    void handlePrivMsg(Server& serv, Client& client, Parser& cmd);
 
 }
