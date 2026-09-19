@@ -35,12 +35,15 @@ int main(int ac, char *av[]) {
     try {
         signal(SIGINT, Server::signalHandler);
         signal(SIGQUIT, Server::signalHandler);
-        if (server.initServer()) {
+        try {
+            server.initServer();
+        } catch (const std::exception& e) {
+            std::cerr << "Failed to initialize the server!\n";
+            std::cerr << "Error: " << e.what() << std::endl;
+            return  EXIT_FAILURE;
+        }
         std::cout << "Server initialized successfully, waiting for connections..\n";
         server.runServer();
-        } else {
-            std::cerr << "Failed to initialize the server!\n";
-        }
     } catch (const std::exception& e) {
         std::cerr << "Error: " << e.what() << std::endl;
         return  EXIT_FAILURE;
