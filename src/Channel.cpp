@@ -1,6 +1,7 @@
 #include "Channel.hpp"
 #include "Client.hpp"
 #include <cmath> // for NAN
+#include "IRC.hpp"
 
 namespace mode {
     enum allModes {
@@ -135,4 +136,20 @@ bool	Channel::isFull(void) const {
     if (this->_members.size() + this->_operators.size() == this->_userLimit)
         return (true);
     return (false);
+
+
+
+
+inline bool isValidChannelName(std::string_view name)
+{
+    if (name.size() < 2 || name.size() > IRC::CHANNELLEN)
+        return false;
+    if (name[0] != '#' && name[0] != '&')
+        return false;
+    for (char c : name)
+    {
+        if (c == ' ' || c == ',' || c == '\a' || static_cast<unsigned char>(c) <= 32)
+            return false;
+    }
+    return true;
 }

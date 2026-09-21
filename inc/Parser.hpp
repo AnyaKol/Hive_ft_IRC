@@ -1,14 +1,22 @@
 #pragma once
 
+#include <string>
 #include <string_view>
 #include <vector>
 
 class Parser {
-public:
-    std::string_view                prefix;
-    std::string_view                command;
-    std::vector<std::string_view>   params;
+private:
+    std::string_view                _prefix;
+    std::string                     _command;
+    std::vector<std::string_view>   _params;
 
+public:
     Parser(std::string_view message);
     ~Parser() = default;
+
+    const   std::string_view&                getPrefix() const {return _prefix;}
+    const   std::string&                     getCommand() const {return _command;}
+    const   std::vector<std::string_view>&   getParams() const {return _params;}
+
+    void setCommand(std::string_view command);
 };
