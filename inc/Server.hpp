@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Client.hpp"
+
 #include <sys/poll.h>
 #include <sys/types.h>
 #include <iostream>
@@ -12,7 +14,6 @@
 #include <memory>
 #include <unordered_map> // pair key value dicionary (e.g socket/ client)
 #include <vector>
-#include "Client.hpp"
 
 #define MAXLINE 1024
 
@@ -27,7 +28,6 @@ class Server {
 
         static bool _signal;
         std::unordered_map<int, Client> _clients;
-        std::unordered_map<std::string, Channel> _channels; // all channels on server
         std::vector<struct pollfd> _pollfds;
 
     public:

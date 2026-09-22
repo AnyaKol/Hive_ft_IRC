@@ -1,10 +1,10 @@
 #pragma once
 
-#include <string>
-#include <string_view>
 #include "Channel.hpp"
 
-class Server;
+#include <string>
+#include <string_view>
+
 
 class Client {
 
@@ -24,9 +24,9 @@ class Client {
 
 public:
         // Changed to = delete to fix compilation error caused by Server& _server reference
-        Client() = delete;
-        Client(const Client&) = delete;
-        Client(Server& server, int socket);
+        Client() = default;
+        Client(const Client&) = default;
+        Client(int socket);
         ~Client() = default;
 
         // Changed to = delete to fix compilation error caused by Server& _server reference

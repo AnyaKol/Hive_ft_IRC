@@ -73,11 +73,6 @@ bool    Server::initServer() {
 
     return true;
 
-void	Server::signalHandler(int sig) {
-
-	(void)sig;
-	std::cout << "\nSignal Arrived!\n";
-	Server::_signal = true;
 }
 
 void Server::runServer() {
