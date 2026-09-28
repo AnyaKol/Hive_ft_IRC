@@ -1,7 +1,11 @@
 #include "../inc/Server.hpp"
 
 #include <arpa/inet.h>
+#include <cstddef>
+#include <cerrno>
+#include <cstring>
 #include <fcntl.h>
+#include <iostream>
 #include <sys/poll.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -39,7 +43,7 @@ bool	Server::initServer() {
 		return false;
 	}
 
-	ret = fcntl(_serverSocket, F_SETFL, O_NONBLOCK); // Set the socket to non-blocking mode
+	ret = fcntl(_serverSocket, F_SETFL, O_NONBLOCK);
 	if (-1 == ret) {
 		std::cerr << "Failed to set socket to non-blocking mode." << std::endl;
 		return false;
@@ -79,6 +83,19 @@ void Server::runServer() {
 
     while (!_signal) {
 
+		for (size_t i = 0; i < _pollfds.size(); i++) {
+
+			if (_pollfds[i].fd == _serverSocket)
+				_pollfds[i].events = POLLIN;
+			else {
+				int fd = _pollfds[i].fd;
+				if (!_clients[fd].getWriteBuffer().empty())
+					_pollfds[i].events = POLLIN | POLLOUT;
+				else
+				 	_pollfds[i].events = POLLIN;
+			}
+		}
+
        	if (poll(&_pollfds[0], _pollfds.size(), -1) == -1) { // block until an event occur
 			if (!_signal) {
 				std::cerr << "Error: Poll failed!" << std::endl;
@@ -88,16 +105,17 @@ void Server::runServer() {
 
         for (size_t i = 0; i < _pollfds.size(); i++) {
 
-            if (_pollfds[i].revents & POLLIN) { // checks if the POLLIN read event is ready
+            if (_pollfds[i].revents & POLLIN) {
 
                 if (_pollfds[i].fd == _serverSocket) { // the event is from the server socket, meaning new client is connecting
 					acceptClient();
                 } else {
-                    // else then the event is from the client socket (They sent us an IRC command!)
+
 					size_t current_size = _pollfds.size();
 					receiveData(_pollfds[i].fd);
 					if (_pollfds.size() < current_size) {
 						i--; // Decrement i so we don't skip the element that just shifted left from clearClient.
+						continue;
 					}
                 }
             }
@@ -147,7 +165,7 @@ void	Server::acceptClient() {
 	}
 
 	client_pollfd.fd = clientFd;
-	client_pollfd.events = POLLIN | POLLOUT; // Client sockets need to both read (POLLIN) and write (POLLOUT)
+	client_pollfd.events = POLLIN;
 	client_pollfd.revents = 0;
 
 	if (inet_ntop(AF_INET, &clientAddress.sin_addr, clientIP, INET_ADDRSTRLEN))	{
@@ -159,7 +177,7 @@ void	Server::acceptClient() {
 		return;
 	}
 
-	this->_clients.insert(std::make_pair(clientFd, newClient)); // Add the new client to the hash map using their fd as the key
+	this->_clients.insert(std::make_pair(clientFd, newClient));
 	this->_pollfds.push_back(client_pollfd);
 
 	std::cout << "Client (FD " << clientFd << ") connected from IP: " << newClient.getIP() << std::endl;
@@ -171,12 +189,24 @@ void	Server::receiveData(int fd) {
 	char	buffer[MAXLINE] {};
 
 	ssize_t received_data = recv(fd, buffer, MAXLINE -1, 0);
-	if (received_data <= 0) {
+
+	if (received_data == 0) {
+		clearClient(fd);
+		return;
+	}
+
+	if (received_data < 0) {
+
+		if (errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR)
+			return;
+
+		std::cerr << "received error on FD: " << fd << ": " << std::strerror(errno) << std::endl;
 		clearClient(fd);
 		return;
 	}
 
 	// parse the data and process it.
+	buffer[received_data] = '\0';
 	_clients[fd].appendToReadBuffer(buffer);
 
 	while (_clients[fd].hasCompleteCommand()) { // we can have multiple commands in the buffer, so we need to process them all
@@ -205,7 +235,7 @@ void Server::clearClient(int fd) {
 void	Server::closeAll() {
 
 	for (std::unordered_map<int, Client>::iterator it = _clients.begin(); it != _clients.end(); ++it) {
-		close(it->second.getSocket()); // first is the fd key, second is the client obj
+		close(it->second.getSocket());
 	}
 	if (-1 != _serverSocket) {
 		close (_serverSocket);

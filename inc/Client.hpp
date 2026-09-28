@@ -14,8 +14,8 @@ class Client {
         std::string _realname {};
         std::string _nickname {};
         std::string _hostname {};
-        std::string _readBuffer {}; // to store client input data and append to it / partial data
-        std::string _writeBuffer {}; // check with POLLOUT in runServer to make sure that the socket is ready to write
+        std::string _readBuffer {};
+        std::string _writeBuffer {};
         std::string _password {};
         std::string _ipAddress {};
         int         _socketFd {-1};
@@ -52,7 +52,6 @@ class Client {
         void    joinChannel();
         void    leaveChannel();
 
-        // Your authentication getters and setters
         bool    isAuthenticated() const { return _isAuthenticated; }
         void    setAuthenticated(bool status) { _isAuthenticated = status; }
 
@@ -61,7 +60,7 @@ class Client {
         std::string extractCommandFromBuffer();
 
         void    appendToReadBuffer(const std::string& data) { _readBuffer += data; }
-        // use it to avoid using send directly from the command handlers, append to the buffer and let the server handle the sending so no partial sends happens..
+
         void    appendToWriteBuffer(const std::string& message) {_writeBuffer += message; }
         void    eraseFromWriteBuffer(size_t len) { _writeBuffer.erase(0, len); }
 
