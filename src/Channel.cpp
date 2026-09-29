@@ -2,6 +2,8 @@
 #include "Client.hpp"
 #include "IRC.hpp"
 
+#include <algorithm>
+
 namespace mode {
 	enum allModes {
 		INVITE_ONLY = static_cast<int>('i'),
@@ -67,7 +69,7 @@ void	Channel::setUserLimit(std::size_t limit) {
 }
 
 void	Channel::addMember(Client& client) {
-	std::pair<iterator, bool>   result;
+	std::pair<iterator, bool>	result;
 
 	if (this->isFull()) {
 		//print error
@@ -75,13 +77,13 @@ void	Channel::addMember(Client& client) {
 	}
 	result = this->_members.insert(&client);
 	if (!result.second) {
-		//print error
+		//print error Client already joined
 		return;
 	}
 }
 
 void	Channel::addOperator(Client& client) {
-	std::pair<iterator, bool>   result;
+	std::pair<iterator, bool>	result;
 
 	if (this->isFull()) {
 		//print error
@@ -89,7 +91,7 @@ void	Channel::addOperator(Client& client) {
 	}
 	result = this->_operators.insert(&client);
 	if (!result.second) {
-		//print error
+		//print error Client already joined
 		return;
 	}
 }
@@ -140,13 +142,15 @@ void	Channel::changeMode(char mode, bool value) {
 }
 
 bool	Channel::isFull(void) const {
+	if (!this->_hasUserLimit)
+		return (false);
+
 	if (this->_members.size() + this->_operators.size() == this->_userLimit)
 		return (true);
 	return (false);
 }
 
-inline bool isValidChannelName(std::string_view name)
-{
+bool	isValidChannelName(std::string_view name) {
 	if (name.size() < 2 || name.size() > IRC::CHANNELLEN)
 		return false;
 	if (name[0] != '#' && name[0] != '&')
@@ -156,4 +160,16 @@ inline bool isValidChannelName(std::string_view name)
 			return false;
 	}
 	return true;
+}
+
+void	Channel::publicMessage(const std::string& msg) const {
+	if (msg.size() == 0)
+		return;
+
+	std::for_each(this->_operators.begin(), this->_operators.end(), [&](Client* client) {
+		(*client).appendToReadBuffer(msg);
+	});
+	std::for_each(this->_members.begin(), this->_members.end(), [&](Client* client) {
+		(*client).appendToReadBuffer(msg);
+	});
 }

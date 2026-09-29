@@ -14,7 +14,7 @@ class Client;
  * 	('&', 0x26) - local channels; the clients connected can only see and talk
  * 	to other clients on the same server
  */
-class Channel{
+class Channel {
 
 	private:
 		std::string	_name;
@@ -37,23 +37,25 @@ class Channel{
 		Channel(const Channel&) = delete;
 		~Channel(void) = default;
 
-		Channel&		operator=(const Channel&) = delete;
+		Channel&	operator=(const Channel&) = delete;
 
 		typedef std::set<Client*>::iterator	iterator;
 
-		void			addMember(Client& client);
-		void			addOperator(Client& client);
-		void			removeMember(Client& client);
-		void			removeOperator(Client& client);
-		void			memberToOperator(Client& client);
-		void			operatorToMember(Client& client);
-		void			changeMode(char mode, bool value);
+		void	addMember(Client& client);
+		void	addOperator(Client& client);
+		void	removeMember(Client& client);
+		void	removeOperator(Client& client);
+		void	memberToOperator(Client& client);
+		void	operatorToMember(Client& client);
+		void	changeMode(char mode, bool value);
+
+		void	publicMessage(const std::string& msg) const;
 
 		bool			isFull(void) const;
 
 		std::string_view	getName(void) const;
 		std::string_view	getTopic(void) const;
-		std::size_t		getUserLimit(void) const;
+		std::size_t			getUserLimit(void) const;
 
 		void	setName(std::string_view name);
 		void	setTopic(std::string_view topic, Client& client);

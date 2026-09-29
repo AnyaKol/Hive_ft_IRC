@@ -8,66 +8,66 @@
 
 class Client {
 
-    private:
+	private:
 
-        std::string _username {};
-        std::string _realname {};
-        std::string _nickname {};
-        std::string _hostname {};
-        std::string _readBuffer {};
-        std::string _writeBuffer {};
-        std::string _password {};
-        std::string _ipAddress {};
-        int         _socketFd {-1};
-        bool        _isAuthenticated = false;
-        bool        _shouldDisconnect = false;
+		std::string	_username {};
+		std::string	_realname {};
+		std::string	_nickname {};
+		std::string	_hostname {};
+		std::string	_readBuffer {};
+		std::string	_writeBuffer {};
+		std::string	_password {};
+		std::string	_ipAddress {};
+		int		 _socketFd {-1};
+		bool		_isAuthenticated = false;
+		bool		_shouldDisconnect = false;
 
 public:
-        // Changed to = delete to fix compilation error caused by Server& _server reference
-        Client() = default;
-        Client(const Client&) = default;
-        Client(int socket);
-        ~Client() = default;
+		// Changed to = delete to fix compilation error caused by Server& _server reference
+		Client() = default;
+		Client(const Client&) = default;
+		Client(int socket);
+		~Client() = default;
 
-        // Changed to = delete to fix compilation error caused by Server& _server reference
-        Client&     operator=(const Client&) = delete;
-
-
-        const   std::string&    getRealname() const { return _realname; };
-        const   std::string&    getUsername() const { return _username; };
-        const   std::string&    getNickname() const { return _nickname; };
-        const   std::string&    getHostname() const { return _hostname; };
-        const   std::string&    getIP() const { return _ipAddress; };
-        const   std::string&    getReadBuffer() const {return _readBuffer;}
-        const   std::string&    getWriteBuffer() const {return _writeBuffer;}
-        int     getSocket() const { return _socketFd; }
-        bool    shouldDisconnect() const { return _shouldDisconnect; }
-
-        void    setSocket(int fd) { this->_socketFd = fd; }
-        void    setIP(const std::string& ip) { _ipAddress = ip; }
-        void    setRealname(const std::string_view realname) { _realname = realname; }
-        void    setUsername(const std::string_view username) { _username = username; }
-        void    setNickname(const std::string_view nickname) { _nickname = nickname; }
-        void    setHostname(const std::string_view hostname) { _hostname = hostname; }
-        void    setShouldDisconnect(bool status) { _shouldDisconnect = status; }
-
-        void    joinChannel();
-        void    leaveChannel();
-
-        bool    isAuthenticated() const { return _isAuthenticated; }
-        void    setAuthenticated(bool status) { _isAuthenticated = status; }
+		// Changed to = delete to fix compilation error caused by Server& _server reference
+		Client&	 operator=(const Client&) = delete;
 
 
-        bool    hasCompleteCommand() const;
-        std::string extractCommandFromBuffer();
+		const std::string&	getRealname() const { return _realname; };
+		const std::string&	getUsername() const { return _username; };
+		const std::string&	getNickname() const { return _nickname; };
+		const std::string&	getHostname() const { return _hostname; };
+		const std::string&	getIP() const { return _ipAddress; };
+		const std::string&	getReadBuffer() const {return _readBuffer;}
+		const std::string&	getWriteBuffer() const {return _writeBuffer;}
+		int					getSocket() const { return _socketFd; }
+		bool				shouldDisconnect() const { return _shouldDisconnect; }
 
-        void    appendToReadBuffer(const std::string& data) { _readBuffer += data; }
+		void	setSocket(int fd) { this->_socketFd = fd; }
+		void	setIP(const std::string& ip) { _ipAddress = ip; }
+		void	setRealname(const std::string_view realname) { _realname = realname; }
+		void	setUsername(const std::string_view username) { _username = username; }
+		void	setNickname(const std::string_view nickname) { _nickname = nickname; }
+		void	setHostname(const std::string_view hostname) { _hostname = hostname; }
+		void	setShouldDisconnect(bool status) { _shouldDisconnect = status; }
 
-        void    appendToWriteBuffer(const std::string& message) {_writeBuffer += message; }
-        void    eraseFromWriteBuffer(size_t len) { _writeBuffer.erase(0, len); }
+		void	joinChannel();
+		void	leaveChannel();
+
+		bool	isAuthenticated() const { return _isAuthenticated; }
+		void	setAuthenticated(bool status) { _isAuthenticated = status; }
 
 
-        bool isRegistered() const;
+		bool		hasCompleteCommand() const;
+		std::string	extractCommandFromBuffer();
+
+		void	appendToReadBuffer(const std::string& data) { _readBuffer += data; }
+
+		void	appendToWriteBuffer(const std::string& message) {_writeBuffer += message; }
+		void	eraseFromWriteBuffer(size_t len) { _writeBuffer.erase(0, len); }
+
+
+		bool isRegistered() const;
 
 
 };
