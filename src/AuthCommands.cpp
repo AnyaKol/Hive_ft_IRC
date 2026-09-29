@@ -1,8 +1,9 @@
-#include "../inc/Commands.hpp"
-#include "../inc/Server.hpp"
-#include "../inc/Client.hpp"
-#include "../inc/Parser.hpp"
-#include "../inc/IRC.hpp"
+#include "Commands.hpp"
+#include "Server.hpp"
+#include "Client.hpp"
+#include "Parser.hpp"
+#include "IRC.hpp"
+
 #include <sys/socket.h>
 #include <iostream>
 

@@ -1,3 +1,5 @@
+#include "Server.hpp"
+
 #include <exception>
 #include <iostream>
 #include <string>
@@ -5,8 +7,6 @@
 #include <charconv>
 #include <system_error>
 #include <cstdlib>
-
-#include "Server.hpp"
 
 int main(int ac, char *av[]) {
 

@@ -2,9 +2,10 @@
 #include "Server.hpp"
 #include "Client.hpp"
 #include "Parser.hpp"
+#include "IRC.hpp"
+
 #include <sys/socket.h>
 #include <iostream>
-#include "IRC.hpp"
 
 void Commands::processCommand(Server& serv, Client& client, Parser& cmd) {
 

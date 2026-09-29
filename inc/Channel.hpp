@@ -51,12 +51,12 @@ class Channel{
 
 		bool			isFull(void) const;
 
-		std::string&	getName(void) const;
-		std::string&	getTopic(void) const;
+		std::string_view	getName(void) const;
+		std::string_view	getTopic(void) const;
 		std::size_t		getUserLimit(void) const;
 
 		void	setName(std::string_view name);
-		void	setTopic(std::string_view topic);
+		void	setTopic(std::string_view topic, Client& client);
 		void	setUserLimit(std::size_t members);
 
 };

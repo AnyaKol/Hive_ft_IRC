@@ -1,4 +1,6 @@
 #include "Server.hpp"
+#include "Parser.hpp"
+#include "Commands.hpp"
 
 #include <arpa/inet.h>
 #include <fcntl.h>
@@ -8,8 +10,7 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
-#include <Parser.hpp>
-#include <Commands.hpp>
+
 
 bool    Server::_signal = false;
 
