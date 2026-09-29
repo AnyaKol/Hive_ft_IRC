@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Client.hpp"
+
 #include <sys/poll.h>
 #include <sys/types.h>
 #include <iostream>
@@ -12,7 +14,6 @@
 #include <memory>
 #include <unordered_map> // pair key value dicionary (e.g socket/ client)
 #include <vector>
-#include "Client.hpp"
 
 #define MAXLINE 1024
 

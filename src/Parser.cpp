@@ -1,4 +1,5 @@
-#include "../inc/Parser.hpp"
+#include "Parser.hpp"
+
 #include <algorithm>
 #include <ranges>
 #include <cctype>

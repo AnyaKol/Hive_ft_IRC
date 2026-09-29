@@ -8,17 +8,17 @@ RESET = \033[0m
 
 NAME = ircserv
 
-CXX = c++
+CXX ?= c++
 CXXFLAGS = -Wall -Wextra -Werror -std=c++20 -I./inc
 DEPFLAGS = -MMD -MP
 
 SRCS = src/main.cpp \
-       src/Server.cpp \
-       src/Parser.cpp \
-       src/Client.cpp \
-	   src/CommandHandler.cpp \
-	   src/AuthCommands.cpp
-#        src/Channel.cpp \
+		src/Server.cpp \
+		src/Parser.cpp \
+		src/Client.cpp \
+		src/CommandHandler.cpp \
+		src/AuthCommands.cpp \
+		src/Channel.cpp \
 
 OBJ_DIR = obj/
 
@@ -31,6 +31,7 @@ all: $(NAME)
 $(NAME): $(OBJS)
 	$(CXX) $(CXXFLAGS) $^ -o $@
 	@printf "$(GREEN)✓ $(NAME) built successfully!$(RESET)\n"
+	@printf "  Usage: $(YELLOW)./$(NAME) <port> <password>$(RESET)\n"
 
 $(OBJ_DIR)%.o: src/%.cpp
 	@mkdir -p $(dir $@)
