@@ -149,6 +149,7 @@ void Commands::handleQuit(Server& serv, Client& client, Parser& cmd) {
 
     std::string reply = "ERROR :Closing Link: (" + reason + ")\r\n";
     client.appendToWriteBuffer(reply);
+    client.setShouldDisconnect(true);
 
     std::cout << "Client on socket " << client.getSocket() << " is quitting: " << reason << "\n";
 }

@@ -31,6 +31,7 @@ all: $(NAME)
 $(NAME): $(OBJS)
 	$(CXX) $(CXXFLAGS) $^ -o $@
 	@printf "$(GREEN)✓ $(NAME) built successfully!$(RESET)\n"
+	@printf "  Usage: $(YELLOW)./$(NAME) <port> <password>$(RESET)\n"
 
 $(OBJ_DIR)%.o: src/%.cpp
 	@mkdir -p $(dir $@)
