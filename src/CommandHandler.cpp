@@ -4,12 +4,21 @@
 #include "Parser.hpp"
 #include "IRC.hpp"
 
+//Included channel
+#include "Channel.hpp"
+
 #include <sys/socket.h>
 #include <iostream>
 
 void Commands::processCommand(Server& serv, Client& client, Parser& cmd) {
 
 	std::string command = cmd.getCommand();
+
+	//Check if it's a channel command
+	if (Channel::isChannelCommand(command)) {
+		Channel::handleChannelCommand(serv, client, command);
+		return;
+	}
 
 	// Allow registeration commands to go through unconditionally
 	if (command == "PASS") { handlePass(serv, client, cmd); return; }

@@ -51,7 +51,7 @@ class Channel {
 
 		void	publicMessage(const std::string& msg) const;
 
-		bool			isFull(void) const;
+		bool	isFull(void) const;
 
 		std::string_view	getName(void) const;
 		std::string_view	getTopic(void) const;
@@ -61,4 +61,8 @@ class Channel {
 		void	setTopic(std::string_view topic, Client& client);
 		void	setUserLimit(std::size_t members);
 
+		//Commands
+		static bool	isChannelCommand(std::string command);
+		static void	handleChannelCommand(Server& serv, Client& client,
+			std::string command);
 };
