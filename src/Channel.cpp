@@ -173,3 +173,27 @@ void	Channel::publicMessage(const std::string& msg) const {
 		(*client).appendToReadBuffer(msg);
 	});
 }
+
+namespace channelCommand {
+	enum allCommands {
+		JOIN = "JOIN"
+	};
+}
+
+// Commands
+bool	Channel::isChannelCommand(std::string command) {
+	switch (command) {
+		case channelCommand::JOIN:
+			std::cout << "Command is JOIN" << std::endl;
+			return (true);
+		default:
+			return (false);
+	}
+}
+
+void	Channel::handleChannelCommand(Client& client, std::string command) {
+	(void) client;
+
+	std::cout << "Need to handle command" << command << std::endl;
+	return;
+}

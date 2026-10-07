@@ -16,7 +16,7 @@ void Commands::processCommand(Server& serv, Client& client, Parser& cmd) {
 
 	//Check if it's a channel command
 	if (Channel::isChannelCommand(command)) {
-		Channel::handleChannelCommand(serv, client, command);
+		Channel::handleChannelCommand(client, command);
 		return;
 	}
 

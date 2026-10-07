@@ -1,5 +1,6 @@
 #pragma once
 
+#include <iostream>
 #include <string>
 #include <string_view>
 #include <set>
@@ -63,6 +64,5 @@ class Channel {
 
 		//Commands
 		static bool	isChannelCommand(std::string command);
-		static void	handleChannelCommand(Server& serv, Client& client,
-			std::string command);
+		static void	handleChannelCommand(Client& client, std::string command);
 };

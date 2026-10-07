@@ -207,6 +207,9 @@ void	Server::receiveData(int fd) {
 	buffer[received_data] = '\0';
 	_clients[fd].appendToReadBuffer(buffer);
 
+	//Print out client buffer for testing
+    std::cout << "Got message from fd " << fd << ": '" << buffer << "'" << std::endl;//TODO: Remove after testing
+
 	while (_clients[fd].hasCompleteCommand()) { // we can have multiple commands in the buffer, so we need to process them all
 
 		std::string command = _clients[fd].extractCommandFromBuffer();
