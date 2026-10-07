@@ -1,11 +1,11 @@
 #pragma once
 
-#include "IChannelCommand.hpp"
+#include "AChannelCommand.hpp"
 
 /* Command: KICK
  * Parameters: <channel> <user> *( "," <user> ) [<comment>]
  */
-class Kick : public virtual IChannelCommand {
+class Kick : public virtual AChannelCommand {
 	private:
 
 	public:

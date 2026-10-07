@@ -63,6 +63,7 @@ class Channel {
 		void	setUserLimit(std::size_t members);
 
 		//Commands
-		static bool	isChannelCommand(std::string command);
-		static void	handleChannelCommand(Client& client, std::string command);
+		static bool				isChannelCommand(Client& client, std::string& command);
+		static AChannelCommand&	makeCommand(std::string& command);
+		static int				makeCommandNumber(std::string& command);
 };

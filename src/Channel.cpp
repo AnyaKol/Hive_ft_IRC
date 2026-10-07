@@ -174,26 +174,42 @@ void	Channel::publicMessage(const std::string& msg) const {
 	});
 }
 
-namespace channelCommand {
-	enum allCommands {
-		JOIN = "JOIN"
-	};
+// Commands
+bool	Channel::isChannelCommand(Client& client, std::string& command) {
+
+	try {
+		AChannelCommand cmd = Channel::makeCommand(command);
+		cmd.execute(client);
+	} catch (NotChannelCommandException &e) {
+		return (false);
+	}
+	return (true);
 }
 
-// Commands
-bool	Channel::isChannelCommand(std::string command) {
-	switch (command) {
-		case channelCommand::JOIN:
-			std::cout << "Command is JOIN" << std::endl;
-			return (true);
+AChannelCommand&	Channel::makeCommand(std::string& command) {
+	enum		allCommands {
+		JOIN
+	};
+	int commandNumber = makeCommandNumber(command);
+
+	switch (commandNumber) {
+		case allCommands::JOIN:
+			return (Join());
 		default:
-			return (false);
+			throw (NotChannelCommandException);
 	}
 }
 
-void	Channel::handleChannelCommand(Client& client, std::string command) {
-	(void) client;
+//TODO: Optimize for loop
+int	Channel::makeCommandNumber(std::string& command) {
+	std::string	commandStrings[1] = {
+		"JOIN"
+	};
+	int commandNumber = 0;
 
-	std::cout << "Need to handle command" << command << std::endl;
-	return;
+	for (str : commandStrings) {
+		if (command == commandStrings[commandNumber])
+			break ;
+	}
+	return (commandNumber);
 }

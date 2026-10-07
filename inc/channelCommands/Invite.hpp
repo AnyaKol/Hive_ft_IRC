@@ -1,11 +1,11 @@
 #pragma once
 
-#include "IChannelCommand.hpp"
+#include "AChannelCommand.hpp"
 
 /* Command: INVITE
  * Parameters: <nickname> <channel>
  */
-class Invite : public virtual IChannelCommand {
+class Invite : public virtual AChannelCommand {
 	private:
 
 	public:

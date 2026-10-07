@@ -1,12 +1,12 @@
 #pragma once
 
-#include "IChannelCommand.hpp"
+#include "AChannelCommand.hpp"
 
 /* Command: JOIN
  * Parameters: <channel>{,<channel>} [<key>{,<key>}]
  * Alt Params: 0
  */
-class Join : public virtual IChannelCommand {
+class Join : public virtual AChannelCommand {
 	private:
 
 	public:

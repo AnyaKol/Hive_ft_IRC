@@ -1,11 +1,11 @@
 #pragma once
 
-#include "IChannelCommand.hpp"
+#include "AChannelCommand.hpp"
 
 /* Command: PART
  * Parameters: <channel>{,<channel>} [<reason>]
  */
-class Part : public virtual IChannelCommand {
+class Part : public virtual AChannelCommand {
 	private:
 
 	public:
