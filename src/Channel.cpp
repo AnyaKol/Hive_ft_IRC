@@ -1,4 +1,15 @@
 #include "Channel.hpp"
+
+//Commands
+#include "AChannelCommand.hpp"
+#include "Invite.hpp"
+#include "Join.hpp"
+#include "Kick.hpp"
+#include "Mode.hpp"
+#include "Names.hpp"
+#include "Part.hpp"
+#include "Topic.hpp"
+
 #include "Client.hpp"
 #include "IRC.hpp"
 
@@ -188,15 +199,33 @@ bool	Channel::isChannelCommand(Client& client, std::string& command) {
 
 AChannelCommand&	Channel::makeCommand(std::string& command) {
 	enum		allCommands {
-		JOIN
+		INVITE,
+		JOIN,
+		KICK,
+		MODE,
+		NAMES,
+		PART,
+		TOPIC
 	};
 	int commandNumber = makeCommandNumber(command);
 
 	switch (commandNumber) {
+		case allCommands::INVITE:
+			return (Invite());
 		case allCommands::JOIN:
 			return (Join());
+		case allCommands::KICK:
+			return (Kick());
+		case allCommands::MODE:
+			return (Mode());
+		case allCommands::NAMES:
+			return (Names());
+		case allCommands::PART:
+			return (Part());
+		case allCommands::TOPIC:
+			return (Topic());
 		default:
-			throw (NotChannelCommandException);
+			throw (NotChannelCommandException());
 	}
 }
 
