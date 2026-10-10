@@ -9,11 +9,11 @@ class Topic : public virtual AChannelCommand {
 	private:
 
 	public:
-		Topic(void) = delete;
+		Topic(void) = default;
 		Topic(const Topic&) = delete;
 		~Topic(void) = default;
 
 		Topic&	operator=(const Topic&) = delete;
 
-		void	execute() override;
+		void	execute(Client& client) override;
 };

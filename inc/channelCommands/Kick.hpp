@@ -9,11 +9,11 @@ class Kick : public virtual AChannelCommand {
 	private:
 
 	public:
-		Kick(void) = delete;
+		Kick(void) = default;
 		Kick(const Kick&) = delete;
 		~Kick(void) = default;
 
 		Kick&	operator=(const Kick&) = delete;
 
-		void	execute() override;
+		void	execute(Client& client) override;
 };

@@ -9,11 +9,11 @@ class Mode : public virtual AChannelCommand {
 	private:
 
 	public:
-		Mode(void) = delete;
+		Mode(void) = default;
 		Mode(const Mode&) = delete;
 		~Mode(void) = default;
 
 		Mode&	operator=(const Mode&) = delete;
 
-		void	execute() override;
+		void	execute(Client& client) override;
 };

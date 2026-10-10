@@ -1,5 +1,14 @@
 #pragma once
 
+//Commands
+#include "Invite.hpp"
+#include "Join.hpp"
+#include "Kick.hpp"
+#include "Mode.hpp"
+#include "Names.hpp"
+#include "Part.hpp"
+#include "Topic.hpp"
+
 #include <iostream>
 #include <string>
 #include <string_view>
@@ -7,14 +16,6 @@
 
 class Client;
 
-/* Channel name may not contain any spaces (' ', 0x20), a control G / BELL
- * ('^G', 0x07), or a comma (',', 0x2C)
- * Channel name prefix may be:
- * 	('#', 0x23) - regular channel; known to all servers that are connected to
- * 	the network
- * 	('&', 0x26) - local channels; the clients connected can only see and talk
- * 	to other clients on the same server
- */
 class Channel {
 
 	private:
@@ -63,7 +64,21 @@ class Channel {
 		void	setUserLimit(std::size_t members);
 
 		//Commands
-		static bool				isChannelCommand(Client& client, std::string& command);
-		static AChannelCommand&	makeCommand(std::string& command);
-		static int				makeCommandNumber(std::string& command);
+		static bool	isChannelCommand(Client& client, std::string& command);
+		static int	makeCommandNumber(std::string& command);
+
+		static AChannelCommand*	makeCommand(std::string& command);
+
+		//Exceptions
+		class	NotChannelCommandException;
+};
+
+//Exceptions
+class	Channel::NotChannelCommandException : public std::exception {
+	private:
+		static const std::string	_msg;
+	public:
+		NotChannelCommandException(void) = default;
+		~NotChannelCommandException(void) = default;
+		const char*	what(void) const noexcept override;
 };

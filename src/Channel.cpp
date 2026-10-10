@@ -1,19 +1,11 @@
 #include "Channel.hpp"
-
-//Commands
-#include "AChannelCommand.hpp"
-#include "Invite.hpp"
-#include "Join.hpp"
-#include "Kick.hpp"
-#include "Mode.hpp"
-#include "Names.hpp"
-#include "Part.hpp"
-#include "Topic.hpp"
-
 #include "Client.hpp"
 #include "IRC.hpp"
 
 #include <algorithm>
+#include <vector>
+//For unique pointer
+#include <memory>
 
 namespace mode {
 	enum allModes {
@@ -161,6 +153,14 @@ bool	Channel::isFull(void) const {
 	return (false);
 }
 
+/* Channel name may not contain any spaces (' ', 0x20), a control G / BELL
+ * ('^G', 0x07), or a comma (',', 0x2C)
+ * Channel name prefix may be:
+ * 	('#', 0x23) - regular channel; known to all servers that are connected to
+ * 	the network
+ * 	('&', 0x26) - local channels; the clients connected can only see and talk
+ * 	to other clients on the same server
+ */
 bool	isValidChannelName(std::string_view name) {
 	if (name.size() < 2 || name.size() > IRC::CHANNELLEN)
 		return false;
@@ -189,15 +189,15 @@ void	Channel::publicMessage(const std::string& msg) const {
 bool	Channel::isChannelCommand(Client& client, std::string& command) {
 
 	try {
-		AChannelCommand cmd = Channel::makeCommand(command);
-		cmd.execute(client);
+		std::unique_ptr<AChannelCommand> cmd( Channel::makeCommand(command) );
+		cmd->execute(client);
 	} catch (NotChannelCommandException &e) {
 		return (false);
 	}
 	return (true);
 }
 
-AChannelCommand&	Channel::makeCommand(std::string& command) {
+AChannelCommand*	Channel::makeCommand(std::string& command) {
 	enum		allCommands {
 		INVITE,
 		JOIN,
@@ -211,19 +211,19 @@ AChannelCommand&	Channel::makeCommand(std::string& command) {
 
 	switch (commandNumber) {
 		case allCommands::INVITE:
-			return (Invite());
+			return (new Invite());
 		case allCommands::JOIN:
-			return (Join());
+			return (new Join());
 		case allCommands::KICK:
-			return (Kick());
+			return (new Kick());
 		case allCommands::MODE:
-			return (Mode());
+			return (new Mode());
 		case allCommands::NAMES:
-			return (Names());
+			return (new Names());
 		case allCommands::PART:
-			return (Part());
+			return (new Part());
 		case allCommands::TOPIC:
-			return (Topic());
+			return (new Topic());
 		default:
 			throw (NotChannelCommandException());
 	}
@@ -231,14 +231,28 @@ AChannelCommand&	Channel::makeCommand(std::string& command) {
 
 //TODO: Optimize for loop
 int	Channel::makeCommandNumber(std::string& command) {
-	std::string	commandStrings[1] = {
-		"JOIN"
+	std::vector<std::string>	commandStrings = {
+		"INVITE",
+		"JOIN",
+		"KICK",
+		"MODE",
+		"NAMES",
+		"PART",
+		"TOPIC"
 	};
-	int commandNumber = 0;
+	int num;
 
-	for (str : commandStrings) {
-		if (command == commandStrings[commandNumber])
+	for (num = 0; num < commandStrings.size(); num++) {
+		if (command == commandStrings[num])
 			break ;
 	}
-	return (commandNumber);
+	return (num);
+}
+
+//Exceptions
+const std::string	Channel::NotChannelCommandException::_msg
+	= "Not a channel command.";
+
+const char*	Channel::NotChannelCommandException::what(void) const noexcept {
+	return (this->_msg.c_str());
 }

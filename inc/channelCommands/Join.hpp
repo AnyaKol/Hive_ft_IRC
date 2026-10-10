@@ -10,11 +10,11 @@ class Join : public virtual AChannelCommand {
 	private:
 
 	public:
-		Join(void) = delete;
+		Join(void) = default;
 		Join(const Join&) = delete;
 		~Join(void) = default;
 
 		Join&	operator=(const Join&) = delete;
 
-		void	execute() override;
+		void	execute(Client& client) override;
 };
