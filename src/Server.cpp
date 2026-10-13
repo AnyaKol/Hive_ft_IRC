@@ -8,13 +8,10 @@
 #include <cstring>
 #include <fcntl.h>
 #include <iostream>
-#include <sys/poll.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <unistd.h>
 #include <stdlib.h>
-#include <string.h>
-
 
 bool	Server::_signal = false;
 
@@ -209,6 +206,9 @@ void	Server::receiveData(int fd) {
 	// parse the data and process it.
 	buffer[received_data] = '\0';
 	_clients[fd].appendToReadBuffer(buffer);
+
+	//Print out client buffer for testing
+    std::cout << "Got message from fd " << fd << ": '" << buffer << "'" << std::endl;//TODO: Remove after testing
 
 	while (_clients[fd].hasCompleteCommand()) { // we can have multiple commands in the buffer, so we need to process them all
 

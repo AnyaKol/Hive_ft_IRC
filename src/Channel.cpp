@@ -2,6 +2,11 @@
 #include "Client.hpp"
 #include "IRC.hpp"
 
+#include <algorithm>
+#include <vector>
+//For unique pointer
+#include <memory>
+
 namespace mode {
 	enum allModes {
 		INVITE_ONLY = static_cast<int>('i'),
@@ -67,7 +72,7 @@ void	Channel::setUserLimit(std::size_t limit) {
 }
 
 void	Channel::addMember(Client& client) {
-	std::pair<iterator, bool>   result;
+	std::pair<iterator, bool>	result;
 
 	if (this->isFull()) {
 		//print error
@@ -75,13 +80,13 @@ void	Channel::addMember(Client& client) {
 	}
 	result = this->_members.insert(&client);
 	if (!result.second) {
-		//print error
+		//print error Client already joined
 		return;
 	}
 }
 
 void	Channel::addOperator(Client& client) {
-	std::pair<iterator, bool>   result;
+	std::pair<iterator, bool>	result;
 
 	if (this->isFull()) {
 		//print error
@@ -89,7 +94,7 @@ void	Channel::addOperator(Client& client) {
 	}
 	result = this->_operators.insert(&client);
 	if (!result.second) {
-		//print error
+		//print error Client already joined
 		return;
 	}
 }
@@ -140,13 +145,23 @@ void	Channel::changeMode(char mode, bool value) {
 }
 
 bool	Channel::isFull(void) const {
+	if (!this->_hasUserLimit)
+		return (false);
+
 	if (this->_members.size() + this->_operators.size() == this->_userLimit)
 		return (true);
 	return (false);
 }
 
-inline bool isValidChannelName(std::string_view name)
-{
+/* Channel name may not contain any spaces (' ', 0x20), a control G / BELL
+ * ('^G', 0x07), or a comma (',', 0x2C)
+ * Channel name prefix may be:
+ * 	('#', 0x23) - regular channel; known to all servers that are connected to
+ * 	the network
+ * 	('&', 0x26) - local channels; the clients connected can only see and talk
+ * 	to other clients on the same server
+ */
+bool	isValidChannelName(std::string_view name) {
 	if (name.size() < 2 || name.size() > IRC::CHANNELLEN)
 		return false;
 	if (name[0] != '#' && name[0] != '&')
@@ -156,4 +171,93 @@ inline bool isValidChannelName(std::string_view name)
 			return false;
 	}
 	return true;
+}
+
+void	Channel::publicMessage(const std::string& msg) const {
+	if (msg.size() == 0)
+		return;
+
+	std::for_each(this->_operators.begin(), this->_operators.end(), [&](Client* client) {
+		(*client).appendToReadBuffer(msg);
+	});
+	std::for_each(this->_members.begin(), this->_members.end(), [&](Client* client) {
+		(*client).appendToReadBuffer(msg);
+	});
+}
+
+// Commands
+bool	Channel::isChannelCommand(Client& client, std::string& command) {
+
+	try {
+		std::unique_ptr<AChannelCommand> cmd( Channel::makeCommand(command) );
+		cmd->execute(client);
+	} catch (NotChannelCommandException &e) {
+		return (false);
+	}
+	return (true);
+}
+
+AChannelCommand*	Channel::makeCommand(std::string& command) {
+	enum		allCommands {
+		INVITE,
+		JOIN,
+		KICK,
+		MODE,
+		NAMES,
+		PART,
+		TOPIC
+	};
+	int commandNumber = makeCommandNumber(command);
+
+	switch (commandNumber) {
+		case allCommands::INVITE:
+			return (new Invite());
+		case allCommands::JOIN:
+			return (new Join());
+		case allCommands::KICK:
+			return (new Kick());
+		case allCommands::MODE:
+			return (new Mode());
+		case allCommands::NAMES:
+			return (new Names());
+		case allCommands::PART:
+			return (new Part());
+		case allCommands::TOPIC:
+			return (new Topic());
+		default:
+			throw (NotChannelCommandException());
+	}
+}
+
+//TODO: Optimize for loop
+int	Channel::makeCommandNumber(std::string& command) {
+	const std::vector<std::string>	commandStrings = {
+		"INVITE",
+		"JOIN",
+		"KICK",
+		"MODE",
+		"NAMES",
+		"PART",
+		"TOPIC"
+	};
+	int num = 0;
+
+	for (std::string str : commandStrings) {
+		if (str == command)
+			break;
+		num++;
+	}
+	for (num = 0; num < static_cast<int>(commandStrings.size()); num++) {
+		if (command == commandStrings[num])
+			break ;
+	}
+	return (num);
+}
+
+//Exceptions
+const std::string	Channel::NotChannelCommandException::_msg
+	= "Not a channel command.";
+
+const char*	Channel::NotChannelCommandException::what(void) const noexcept {
+	return (this->_msg.c_str());
 }

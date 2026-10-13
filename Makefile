@@ -9,7 +9,7 @@ RESET = \033[0m
 NAME = ircserv
 
 CXX ?= c++
-CXXFLAGS = -Wall -Wextra -Werror -std=c++20 -I./inc
+CXXFLAGS = -Wall -Wextra -Werror -std=c++20 -I./inc -I./inc/channelCommands
 DEPFLAGS = -MMD -MP
 
 SRCS = src/main.cpp \
@@ -19,6 +19,13 @@ SRCS = src/main.cpp \
 		src/CommandHandler.cpp \
 		src/AuthCommands.cpp \
 		src/Channel.cpp \
+		src/channelCommands/Invite.cpp \
+		src/channelCommands/Join.cpp \
+		src/channelCommands/Kick.cpp \
+		src/channelCommands/Mode.cpp \
+		src/channelCommands/Names.cpp \
+		src/channelCommands/Part.cpp \
+		src/channelCommands/Topic.cpp \
 
 OBJ_DIR = obj/
 
@@ -54,4 +61,4 @@ re: fclean all
 
 .SILENT:
 
-.SECONDARY:
+.SECONDARY: $(OBJS), $(OBJ_DIR)
