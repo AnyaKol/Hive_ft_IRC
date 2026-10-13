@@ -21,6 +21,55 @@ namespace IRC {
 	constexpr std::string_view AVAILABLE_USER_MODES	= "";
 	constexpr std::string_view AVAILABLE_CHANNEL_MODES= "itkol";
 
+	// ==========================================
+	// Numeric Codes enum
+	// ==========================================
+	enum NumericCodes {
+		//Reply
+		WELCOME		 = 001, // Client completes PASS + NICK + USER.
+		YOURHOST		= 002, // Server metadata.
+		CREATED		 = 003, //
+		MYINFO		  = 004, //
+		ISUPPORT		= 005, // Tells the client channel prefixes (#, &) and mode limits.
+
+		CHANNELMODEIS	= 324, // Sent in response to MODE <channel> command, shows the current channel modes and their parameters.
+		CREATIONTIME	= 329, // Sent in response to WHOIS <nick> command, shows the channel creation time.
+		NOTOPIC		 = 331, // Sent in response to TOPIC <channel> command, indicates that the channel has no topic set.
+		TOPIC			= 332, // Sent in response to TOPIC <channel> command, shows the current topic of the channel.
+		TOPICWHOTIME	= 333, // Sent in response to WHOIS <nick> command, shows the user who set the topic and the time it was set.
+		INVITING		= 341, // Sent in response to INVITE <nick> <channel> command, indicates that the user has been invited to the channel.
+		NAMREPLY		= 353, // Sent in response to NAMES <channel> command, shows the list of users in the channel.
+		ENDOFNAMES	  = 366, // Sent in response to NAMES <channel> command, indicates the end of the names list.
+
+		//Errors
+		NOSUCHNICK		= 401, // Sent in response to a command that requires a target nick, but the specified nick does not exist.
+		NOSUCHCHANNEL	= 403, // Sent in response to a command that requires a target channel, but the specified channel does not exist.
+		CANNOTSENDTOCHAN = 404, //
+		NOORIGIN		 = 409, // Sent in response to a command that requires an origin, but no origin is specified.
+		NORECIPIENT	  = 411, // Sent in response to a command that requires a recipient, but no recipient is specified.
+		NOTEXTTOSEND	 = 412, // Sent in response to a command that requires text to be sent, but no text is specified.
+		UNKNOWNCOMMAND	= 421, // Sent in response to a command that is not recognized by the server.
+		NONICKNAMEGIVEN  = 431, // Sent in response to a command that requires a nick, but no nick is specified.
+		ERRONEUSNICKNAME = 432, // Sent in response to a command that requires a valid nick, but the specified nick is invalid.
+		NICKNAMEINUSE	= 433, // Sent in response to a command that requires a unique nick, but the specified nick is already in use.
+		USERNOTINCHANNEL = 441, // Sent in response to a command that requires the user to be in a channel, but the user is not in the channel.
+		NOTONCHANNEL	 = 442, //
+		USERONCHANNEL	= 443, // Sent in response to a command that requires the user to be in a channel, but the user is already in the channel.
+
+		NOTREGISTERED	= 451, // Sent in response to a command that requires the user to be registered, but the user is not registered.
+		NEEDMOREPARAMS	= 461, // Sent in response to a command that requires more parameters, but not enough are specified.
+		ALREADYREGISTERED= 462, // Sent in response to a command that requires the user to be registered, but the user is already registered.
+		PASSWDMISMATCH	= 464, // Sent in response to a command that requires a password, but the specified password is incorrect.
+		CHANNELISFULL	= 471, // Sent in response to a command that requires the channel to be not full, but the channel is full.
+		UNKNOWNMODE	  = 472, // Sent in response to a command that requires a known mode, but the specified mode is unknown.
+		INVITEONLYCHAN	= 473, // Sent in response to a command that requires the channel to be invite-only, but the user is not invited.
+		BADCHANNELKEY	= 475, // Sent in response to a command that requires a valid channel key, but the specified key is invalid.
+		BADCHANMASK	  = 476, // Sent in response to a command that requires a valid channel mask, but the specified mask is invalid.
+		CHANOPRIVSNEEDED = 482, // Sent in response to a command that requires the user to be a channel operator, but the user is not an operator.
+
+		INVALIDKEY		= 525, // Sent in response to a command that requires a valid key, but the specified key is not well-formed.
+		INVALIDMODEPARAM = 696, // Sent in response to a command that requires a valid mode parameter, but the specified parameter is invalid.
+	};
 
 	// ==========================================
 	// Numeric RPL (Reply) Codes

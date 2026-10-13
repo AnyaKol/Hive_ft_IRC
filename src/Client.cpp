@@ -32,6 +32,3 @@ bool	Client::isRegistered() const {
 
 	return _isAuthenticated && !_nickname.empty() && !_username.empty();
 }
-
-void Client::joinChannel() {}
-void Client::leaveChannel() {}

@@ -1,7 +1,5 @@
 #pragma once
 
-#include "Channel.hpp"
-
 #include <string>
 #include <string_view>
 
@@ -50,9 +48,6 @@ public:
 		void	setNickname(const std::string_view nickname) { _nickname = nickname; }
 		void	setHostname(const std::string_view hostname) { _hostname = hostname; }
 		void	setShouldDisconnect(bool status) { _shouldDisconnect = status; }
-
-		void	joinChannel();
-		void	leaveChannel();
 
 		bool	isAuthenticated() const { return _isAuthenticated; }
 		void	setAuthenticated(bool status) { _isAuthenticated = status; }

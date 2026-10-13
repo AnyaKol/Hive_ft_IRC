@@ -231,7 +231,7 @@ AChannelCommand*	Channel::makeCommand(std::string& command) {
 
 //TODO: Optimize for loop
 int	Channel::makeCommandNumber(std::string& command) {
-	std::vector<std::string>	commandStrings = {
+	const std::vector<std::string>	commandStrings = {
 		"INVITE",
 		"JOIN",
 		"KICK",
@@ -240,9 +240,14 @@ int	Channel::makeCommandNumber(std::string& command) {
 		"PART",
 		"TOPIC"
 	};
-	int num;
+	int num = 0;
 
-	for (num = 0; num < commandStrings.size(); num++) {
+	for (std::string str : commandStrings) {
+		if (str == command)
+			break;
+		num++;
+	}
+	for (num = 0; num < static_cast<int>(commandStrings.size()); num++) {
 		if (command == commandStrings[num])
 			break ;
 	}
