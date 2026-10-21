@@ -15,5 +15,5 @@ class Topic : public virtual AChannelCommand {
 
 		Topic&	operator=(const Topic&) = delete;
 
-		void	execute(Client& client) override;
+		void	execute(Client& client, const std::vector<std::string_view>& params) override;
 };

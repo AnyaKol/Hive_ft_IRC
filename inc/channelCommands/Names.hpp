@@ -15,5 +15,5 @@ class Names : public virtual AChannelCommand {
 
 		Names&	operator=(const Names&) = delete;
 
-		void	execute(Client& client) override;
+		void	execute(Client& client, const std::vector<std::string_view>& params) override;
 };

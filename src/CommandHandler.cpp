@@ -15,7 +15,7 @@ void Commands::processCommand(Server& serv, Client& client, Parser& cmd) {
 	std::string command = cmd.getCommand();
 
 	//Check if it's a channel command; if it is - execute and return
-	if (Channel::isChannelCommand(client, command)) {
+	if (Channel::isChannelCommand(client, command, cmd.getParams())) {
 		return;
 	}
 

@@ -15,5 +15,5 @@ class Kick : public virtual AChannelCommand {
 
 		Kick&	operator=(const Kick&) = delete;
 
-		void	execute(Client& client) override;
+		void	execute(Client& client, const std::vector<std::string_view>& params) override;
 };

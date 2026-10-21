@@ -15,6 +15,7 @@
 #include <memory>
 #include <unordered_map> // pair key value dicionary (e.g socket/ client)
 #include <vector>
+#include <set>
 
 #define MAXLINE 1024
 

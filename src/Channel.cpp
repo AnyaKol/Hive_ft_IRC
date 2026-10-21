@@ -186,11 +186,11 @@ void	Channel::publicMessage(const std::string& msg) const {
 }
 
 // Commands
-bool	Channel::isChannelCommand(Client& client, std::string& command) {
+bool	Channel::isChannelCommand(const Client& client, const std::string& command, const std::vector<std::string_view>& params) {
 
 	try {
 		std::unique_ptr<AChannelCommand> cmd( Channel::makeCommand(command) );
-		cmd->execute(client);
+		cmd->execute(client, params);
 	} catch (NotChannelCommandException &e) {
 		return (false);
 	}
@@ -254,10 +254,26 @@ int	Channel::makeCommandNumber(std::string& command) {
 	return (num);
 }
 
+//TODO: Move exceptions to different file
 //Exceptions
-const std::string	Channel::NotChannelCommandException::_msg
+const std::string Channel::NotChannelCommandException::_msg
 	= "Not a channel command.";
 
 const char*	Channel::NotChannelCommandException::what(void) const noexcept {
 	return (this->_msg.c_str());
 }
+
+Channel::NameException::NameException(const std::string& message,
+std::string_view name) {
+	this->_msg = message;
+	this->_msg.append(" '");
+	this->_msg.append(name);
+	this->_msg.append("'.");
+}
+
+const char*	Channel::NameException::what(void) const noexcept {
+	return (this->_msg.c_str());
+}
+
+// NameException, no '.' at the end
+const std::string	Channel::ERR_CHANNEL_NOT_FOUND = "No channel with name";

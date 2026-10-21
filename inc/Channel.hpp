@@ -64,13 +64,15 @@ class Channel {
 		void	setUserLimit(std::size_t members);
 
 		//Commands
-		static bool	isChannelCommand(Client& client, std::string& command);
-		static int	makeCommandNumber(std::string& command);
-
-		static AChannelCommand*	makeCommand(std::string& command);
+		static bool				isChannelCommand(const Client& client, const std::string& command, const std::vector<std::string_view>& params);
+		static AChannelCommand&	makeCommand(std::string& command);
+		static int				makeCommandNumber(std::string& command);
 
 		//Exceptions
+		static const std::string	ERR_CHANNEL_NOT_FOUND;
+
 		class	NotChannelCommandException;
+		class	NameException;
 };
 
 //Exceptions
@@ -78,7 +80,16 @@ class	Channel::NotChannelCommandException : public std::exception {
 	private:
 		static const std::string	_msg;
 	public:
-		NotChannelCommandException(void) = default;
-		~NotChannelCommandException(void) = default;
+		NotChannelCommandException() = default;
+		~NotChannelCommandException() = default;
+		const char*	what(void) const noexcept override;
+};
+
+class	Channel::NameException : public std::exception {
+	private:
+		NameException(void) = delete;
+		std::string	_msg;
+	public:
+		NameException(const std::string& message, std::string_view name);
 		const char*	what(void) const noexcept override;
 };

@@ -15,5 +15,5 @@ class Invite : public virtual AChannelCommand {
 
 		Invite&	operator=(const Invite&) = delete;
 
-		void	execute(Client& client) override;
+		void	execute(Client& client, const std::vector<std::string_view>& params) override;
 };
