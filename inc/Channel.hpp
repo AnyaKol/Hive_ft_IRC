@@ -14,6 +14,7 @@
 #include <string_view>
 #include <set>
 
+class Server;
 class Client;
 
 class Channel {
@@ -64,9 +65,11 @@ class Channel {
 		void	setUserLimit(std::size_t members);
 
 		//Commands
-		static bool				isChannelCommand(const Client& client, const std::string& command, const std::vector<std::string_view>& params);
-		static AChannelCommand&	makeCommand(std::string& command);
-		static int				makeCommandNumber(std::string& command);
+		static bool				isChannelCommand(const std::set<Channel*>& channels,
+			const Client& client, const std::string& command,
+			const std::vector<std::string_view>& params);
+		static AChannelCommand&	makeCommand(const std::string& command);
+		static int				makeCommandNumber(const std::string& command);
 
 		//Exceptions
 		static const std::string	ERR_CHANNEL_NOT_FOUND;

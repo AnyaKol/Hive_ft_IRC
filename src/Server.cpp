@@ -243,11 +243,6 @@ void	Server::closeAll() {
 	}
 }
 
-const std::string& Server::getPassword() {
-
-	return _password;
-}
-
 bool Server::isNicknameTaken(const std::string_view& nickname) const {
 
 	for (const auto& pair : _clients) {

@@ -186,11 +186,13 @@ void	Channel::publicMessage(const std::string& msg) const {
 }
 
 // Commands
-bool	Channel::isChannelCommand(const Client& client, const std::string& command, const std::vector<std::string_view>& params) {
+bool	Channel::isChannelCommand(const std::set<Channel*>& channels,
+			const Client& client, const std::string& command,
+			const std::vector<std::string_view>& params) {
 
 	try {
 		std::unique_ptr<AChannelCommand> cmd( Channel::makeCommand(command) );
-		cmd->execute(client, params);
+		cmd->execute(channels, client, params);
 	} catch (NotChannelCommandException &e) {
 		return (false);
 	}

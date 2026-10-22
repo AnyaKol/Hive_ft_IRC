@@ -44,9 +44,12 @@ class Server {
 		bool		initServer();
 		void		runServer();
 
-		std::uint16_t		getPort();
-		const std::string&	getPassword();
-		const std::string&	getHostname();
+		//Getters
+		std::uint16_t				getPort() const { return _port; };
+		const std::string&			getPassword() const { return _password; };
+		const std::string&			getHostname() const { return _hostname; };
+		const std::set<Channel*>&	getChannels() const { return _channels; };
+
 
 		void	acceptClient();
 		void	receiveData(int fd);
@@ -54,7 +57,9 @@ class Server {
 
 		static void	signalHandler(int sig);
 
-		bool	isNicknameTaken(const std::string_view& nickname)const;
+		bool	isNicknameTaken(const std::string_view& nickname) const;
+
+		void	addChannel(std::string_view name, Client& creator);
 		
 		// ADDED FOR PRIVMSG LOOKUP
 		Client*	getClientByNick(const std::string& nickname);
