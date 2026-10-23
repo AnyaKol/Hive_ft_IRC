@@ -12,13 +12,13 @@ Finds channel with given name. Throws exception if not found.
 							channel was found - throws exception with
 							ERR_CHANNEL_NOT_FOUND message.
 */
-const Channel*	AChannelCommand::findChannel(const std::set<Channel*> channels,
-	const std::string_view channelName) {
+const Channel*	AChannelCommand::findChannel(const std::unordered_set<Channel*>& channels,
+	const std::string_view& channelName) {
 	for (Channel* channel : channels) {
-		std::string_view name = channel.getName();
+		std::string_view name = channel->getName();
 
 		if (name == channelName)
 			return (channel);
 	};
-	throw (NameException(ERR_CHANNEL_NOT_FOUND, channelName));
+	throw (Channel::NameException(Channel::ERR_CHANNEL_NOT_FOUND, channelName));
 }

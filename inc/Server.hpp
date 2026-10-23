@@ -15,7 +15,7 @@
 #include <memory>
 #include <unordered_map> // pair key value dicionary (e.g socket/ client)
 #include <vector>
-#include <set>
+#include <unordered_set>
 
 #define MAXLINE 1024
 
@@ -30,7 +30,7 @@ class Server {
 
 		static bool						_signal;
 		std::unordered_map<int, Client>	_clients;
-		std::set<Channel*>				_channels;
+		std::unordered_set<Channel*>	_channels;
 		std::vector<struct pollfd>		_pollfds;
 
 	public:
@@ -44,9 +44,13 @@ class Server {
 		bool		initServer();
 		void		runServer();
 
-		std::uint16_t		getPort();
-		const std::string&	getPassword();
-		const std::string&	getHostname();
+		//Getters
+		std::uint16_t					getPort() const { return _port; };
+		const std::string&				getPassword() const { return _password; };
+		const std::string&				getHostname() const { return _hostname; };
+		std::unordered_set<Channel*>&	getChannels() const { 
+			return const_cast<std::unordered_set<Channel*>&>(_channels); };
+
 
 		void	acceptClient();
 		void	receiveData(int fd);
@@ -54,7 +58,7 @@ class Server {
 
 		static void	signalHandler(int sig);
 
-		bool	isNicknameTaken(const std::string_view& nickname)const;
+		bool	isNicknameTaken(const std::string_view& nickname) const;
 		
 		// ADDED FOR PRIVMSG LOOKUP
 		Client*	getClientByNick(const std::string& nickname);

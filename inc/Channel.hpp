@@ -12,8 +12,9 @@
 #include <iostream>
 #include <string>
 #include <string_view>
-#include <set>
+#include <unordered_set>
 
+class Server;
 class Client;
 
 class Channel {
@@ -24,9 +25,9 @@ class Channel {
 		std::string	_key;
 		std::size_t	_userLimit;
 
-		std::set<Client*>	_operators{};
-		std::set<Client*>	_members{};
-		std::set<Client*>	_pendingInvites{};
+		std::unordered_set<Client*>	_operators{};
+		std::unordered_set<Client*>	_members{};
+		std::unordered_set<Client*>	_pendingInvites{};
 
 		bool	_inviteOnly = false;
 		bool	_protectedTopic = false;
@@ -41,7 +42,7 @@ class Channel {
 
 		Channel&	operator=(const Channel&) = delete;
 
-		typedef std::set<Client*>::iterator	iterator;
+		typedef std::unordered_set<Client*>::iterator	iterator;
 
 		void	addMember(Client& client);
 		void	addOperator(Client& client);
@@ -64,9 +65,11 @@ class Channel {
 		void	setUserLimit(std::size_t members);
 
 		//Commands
-		static bool				isChannelCommand(const Client& client, const std::string& command, const std::vector<std::string_view>& params);
-		static AChannelCommand&	makeCommand(std::string& command);
-		static int				makeCommandNumber(std::string& command);
+		static bool				isChannelCommand(std::unordered_set<Channel*>& channels,
+			const Client& client, const std::string& command,
+			const std::vector<std::string_view>& params);
+		static AChannelCommand*	makeCommand(const std::string& command);
+		static int				makeCommandNumber(const std::string& command);
 
 		//Exceptions
 		static const std::string	ERR_CHANNEL_NOT_FOUND;

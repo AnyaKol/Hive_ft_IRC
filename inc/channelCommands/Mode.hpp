@@ -15,6 +15,6 @@ class Mode : public virtual AChannelCommand {
 
 		Mode&	operator=(const Mode&) = delete;
 
-		void	execute(const Client& client,
-			const std::vector<std::string_view>& params) override;
+		void	execute(std::unordered_set<Channel*>& channels,
+			const Client& client, const std::vector<std::string_view>& params) override;
 };

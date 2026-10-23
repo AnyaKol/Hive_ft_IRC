@@ -178,26 +178,28 @@ void	Channel::publicMessage(const std::string& msg) const {
 		return;
 
 	std::for_each(this->_operators.begin(), this->_operators.end(), [&](Client* client) {
-		(*client).appendToReadBuffer(msg);
+		(*client).appendToWriteBuffer(msg);
 	});
 	std::for_each(this->_members.begin(), this->_members.end(), [&](Client* client) {
-		(*client).appendToReadBuffer(msg);
+		(*client).appendToWriteBuffer(msg);
 	});
 }
 
 // Commands
-bool	Channel::isChannelCommand(const Client& client, const std::string& command, const std::vector<std::string_view>& params) {
+bool	Channel::isChannelCommand(std::unordered_set<Channel*>& channels,
+			const Client& client, const std::string& command,
+			const std::vector<std::string_view>& params) {
 
 	try {
-		std::unique_ptr<AChannelCommand> cmd( Channel::makeCommand(command) );
-		cmd->execute(client, params);
-	} catch (NotChannelCommandException &e) {
+		std::unique_ptr<AChannelCommand> cmd( makeCommand(command) );
+		cmd->execute(channels, client, params);
+	} catch (std::exception &e) {//Need to specify what exceptions
 		return (false);
 	}
 	return (true);
 }
 
-AChannelCommand*	Channel::makeCommand(std::string& command) {
+AChannelCommand*	Channel::makeCommand(const std::string& command) {
 	enum		allCommands {
 		INVITE,
 		JOIN,
@@ -230,7 +232,7 @@ AChannelCommand*	Channel::makeCommand(std::string& command) {
 }
 
 //TODO: Optimize for loop
-int	Channel::makeCommandNumber(std::string& command) {
+int	Channel::makeCommandNumber(const std::string& command) {
 	const std::vector<std::string>	commandStrings = {
 		"INVITE",
 		"JOIN",

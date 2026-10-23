@@ -14,11 +14,6 @@ void Commands::processCommand(Server& serv, Client& client, Parser& cmd) {
 
 	std::string command = cmd.getCommand();
 
-	//Check if it's a channel command; if it is - execute and return
-	if (Channel::isChannelCommand(client, command, cmd.getParams())) {
-		return;
-	}
-
 	// Allow registeration commands to go through unconditionally
 	if (command == "PASS") { handlePass(serv, client, cmd); return; }
 	if (command == "NICK") { handleNick(serv, client, cmd); return; }
@@ -33,13 +28,16 @@ void Commands::processCommand(Server& serv, Client& client, Parser& cmd) {
 		return;
 	}
 
+	// Channel Commands (Add later)
+	//Check if it's a channel command; if it is - execute and return
+	if (Channel::isChannelCommand(serv.getChannels(), client, command, cmd.getParams())) {
+		return;
+	}
+
 	if (command == "PING") { handlePing(serv, client, cmd); return; }
 	if (command == "PONG") { handlePong(serv, client, cmd); return; }
 	if (command == "QUIT") { handleQuit(serv, client, cmd); return; }
 	if (command == "PRIVMSG") { handlePrivMsg(serv, client, cmd); return; }
-
-
-	// Channel Commands (Add later)
 
 	// THE CATCH-ALL: Command not found
 	if (command == "UNKNOWN") {
