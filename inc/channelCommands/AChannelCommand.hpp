@@ -15,5 +15,6 @@ class AChannelCommand {
 	public:
 		virtual ~AChannelCommand(void) = default;
 
-		virtual void	execute(const Client& client, const std::vector<std::string_view>& params) = 0;
+		virtual void	execute(const Client& client,
+			const std::vector<std::string_view>& params) = 0;
 };
