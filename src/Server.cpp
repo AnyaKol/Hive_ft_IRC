@@ -8,13 +8,10 @@
 #include <cstring>
 #include <fcntl.h>
 #include <iostream>
-#include <sys/poll.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <unistd.h>
 #include <stdlib.h>
-#include <string.h>
-
 
 bool	Server::_signal = false;
 
@@ -210,6 +207,9 @@ void	Server::receiveData(int fd) {
 	buffer[received_data] = '\0';
 	_clients[fd].appendToReadBuffer(buffer);
 
+	//Print out client buffer for testing
+    std::cout << "Got message from fd " << fd << ": '" << buffer << "'" << std::endl;//TODO: Remove after testing
+
 	while (_clients[fd].hasCompleteCommand()) { // we can have multiple commands in the buffer, so we need to process them all
 
 		std::string command = _clients[fd].extractCommandFromBuffer();
@@ -241,11 +241,6 @@ void	Server::closeAll() {
 	if (-1 != _serverSocket) {
 		close (_serverSocket);
 	}
-}
-
-const std::string& Server::getPassword() {
-
-	return _password;
 }
 
 bool Server::isNicknameTaken(const std::string_view& nickname) const {

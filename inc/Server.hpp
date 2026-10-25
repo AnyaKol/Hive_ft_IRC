@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Client.hpp"
+#include "Channel.hpp"
 
 #include <sys/poll.h>
 #include <sys/types.h>
@@ -14,47 +15,53 @@
 #include <memory>
 #include <unordered_map> // pair key value dicionary (e.g socket/ client)
 #include <vector>
+#include <unordered_set>
 
 #define MAXLINE 1024
 
 class Server {
 
-    private:
-        std::uint16_t   _port{};
-        std::string     _password;
-        int             _serverSocket{};
-        std::string     _hostname;
-        std::ofstream   _serverLog; // record server events
+	private:
+		std::uint16_t	_port{};
+		std::string		_password;
+		int				_serverSocket{};
+		std::string		_hostname;
+		std::ofstream	_serverLog; // record server events
 
-        static bool _signal;
-        std::unordered_map<int, Client> _clients;
-        std::vector<struct pollfd> _pollfds;
+		static bool						_signal;
+		std::unordered_map<int, Client>	_clients;
+		std::unordered_set<Channel*>	_channels;
+		std::vector<struct pollfd>		_pollfds;
 
-    public:
-        Server(std::uint16_t port, const std::string &password);
-        Server() = delete;
-        Server(const Server&) = delete;
-        ~Server() = default;
+	public:
+		Server(std::uint16_t port, const std::string &password);
+		Server() = delete;
+		Server(const Server&) = delete;
+		~Server() = default;
 
-        Server&     operator=(const Server&) = delete;
+		Server&	 operator=(const Server&) = delete;
 
-        bool        initServer();
-        void        runServer();
+		bool		initServer();
+		void		runServer();
 
-        std::uint16_t   getPort();
-        const   std::string&    getPassword();
-        const   std::string&    getHostname();
+		//Getters
+		std::uint16_t					getPort() const { return _port; };
+		const std::string&				getPassword() const { return _password; };
+		const std::string&				getHostname() const { return _hostname; };
+		std::unordered_set<Channel*>&	getChannels() const { 
+			return const_cast<std::unordered_set<Channel*>&>(_channels); };
 
-        void    acceptClient();
-        void    receiveData(int fd);
-        void    clearClient(int fd);
 
-        static void signalHandler(int sig);
+		void	acceptClient();
+		void	receiveData(int fd);
+		void	clearClient(int fd);
 
-        bool isNicknameTaken(const std::string_view& nickname)const;
-        
-        // ADDED FOR PRIVMSG LOOKUP
-        Client* getClientByNick(const std::string& nickname);
+		static void	signalHandler(int sig);
 
-        void    closeAll();
+		bool	isNicknameTaken(const std::string_view& nickname) const;
+		
+		// ADDED FOR PRIVMSG LOOKUP
+		Client*	getClientByNick(const std::string& nickname);
+
+		void	closeAll();
 };

@@ -10,108 +10,108 @@
 // PASS <password>
 void Commands::handlePass(Server& serv, Client& client, Parser& cmd) {
 
-    if (cmd.getParams().empty()) {
-        std::string reply = IRC::Reply::errNeedMoreParams(client.getNickname(), cmd.getCommand());
-        client.appendToWriteBuffer(reply);
-        return;
-    }
+	if (cmd.getParams().empty()) {
+		std::string reply = IRC::Reply::errNeedMoreParams(client.getNickname(), cmd.getCommand());
+		client.appendToWriteBuffer(reply);
+		return;
+	}
 
-    if (client.isAuthenticated()) {
-        std::string reply = IRC::Reply::errAlreadyRegistered(client.getNickname());
-        client.appendToWriteBuffer(reply);
-        return;
-    }
+	if (client.isAuthenticated()) {
+		std::string reply = IRC::Reply::errAlreadyRegistered(client.getNickname());
+		client.appendToWriteBuffer(reply);
+		return;
+	}
 
-    if (cmd.getParams()[0] == serv.getPassword()) {
-        client.setAuthenticated(true);
-        std::cout << "Client on socket " << client.getSocket() << " authenticated.\n";
-    } else {
-        std::string reply = IRC::Reply::errPasswordMismatch(client.getNickname());
-        client.appendToWriteBuffer(reply);
+	if (cmd.getParams()[0] == serv.getPassword()) {
+		client.setAuthenticated(true);
+		std::cout << "Client on socket " << client.getSocket() << " authenticated.\n";
+	} else {
+		std::string reply = IRC::Reply::errPasswordMismatch(client.getNickname());
+		client.appendToWriteBuffer(reply);
 
-        client.setShouldDisconnect(true); // Mark the client for disconnection
-        std::cout << "Client on socket " << client.getSocket() << " provided incorrect password. Marked for disconnection.\n";
-    }
+		client.setShouldDisconnect(true); // Mark the client for disconnection
+		std::cout << "Client on socket " << client.getSocket() << " provided incorrect password. Marked for disconnection.\n";
+	}
 }
 
 void Commands::handleNick(Server& serv, Client& client, Parser& cmd) {
 
-    if (cmd.getParams().empty()) {
-        std::string reply = IRC::Reply::errNeedMoreParams("", cmd.getCommand());
-        client.appendToWriteBuffer(reply);
-        return;
-    }
+	if (cmd.getParams().empty()) {
+		std::string reply = IRC::Reply::errNeedMoreParams("", cmd.getCommand());
+		client.appendToWriteBuffer(reply);
+		return;
+	}
 
-    const std::string_view nickname = cmd.getParams()[0];
+	const std::string_view nickname = cmd.getParams()[0];
 
-    if (serv.isNicknameTaken(nickname)) {
-        std::string reply = IRC::Reply::errNickInUse(client.getNickname(), nickname);
-        client.appendToWriteBuffer(reply);
-        return;
-    }
+	if (serv.isNicknameTaken(nickname)) {
+		std::string reply = IRC::Reply::errNickInUse(client.getNickname(), nickname);
+		client.appendToWriteBuffer(reply);
+		return;
+	}
 
-    if (!client.isAuthenticated()) {
-        std::string reply = IRC::Reply::errNotRegistered("");
-        client.appendToWriteBuffer(reply);
-        return;
-    }
+	if (!client.isAuthenticated()) {
+		std::string reply = IRC::Reply::errNotRegistered("");
+		client.appendToWriteBuffer(reply);
+		return;
+	}
 
-    std::string oldNickname = client.getNickname();
-    bool wasRegistered = client.isRegistered();
+	std::string oldNickname = client.getNickname();
+	bool wasRegistered = client.isRegistered();
 
-    client.setNickname(nickname);
+	client.setNickname(nickname);
 
-    std::cout << "Client on socket " << client.getSocket() << " set nickname to: " << client.getNickname() << "\n";
+	std::cout << "Client on socket " << client.getSocket() << " set nickname to: " << client.getNickname() << "\n";
 
-    if (!wasRegistered && client.isRegistered()) { // only print welcome to the user if they were not registred before
-        std::string welcomeMsg = IRC::Reply::welcome(client.getNickname(), client.getUsername(), client.getHostname());
-        client.appendToWriteBuffer(welcomeMsg);
-    }
-     else if (wasRegistered) {
-        // If they are already registered and changing their name, send the confirmation back to them! so irssi updates the interface
-        std::string reply = ":" + oldNickname + "!" + client.getUsername() + "@" + client.getHostname() + " NICK :" + client.getNickname() + "\r\n";
-        client.appendToWriteBuffer(reply);
+	if (!wasRegistered && client.isRegistered()) { // only print welcome to the user if they were not registred before
+		std::string welcomeMsg = IRC::Reply::welcome(client.getNickname(), client.getUsername(), client.getHostname());
+		client.appendToWriteBuffer(welcomeMsg);
+	}
+	 else if (wasRegistered) {
+		// If they are already registered and changing their name, send the confirmation back to them! so irssi updates the interface
+		std::string reply = ":" + oldNickname + "!" + client.getUsername() + "@" + client.getHostname() + " NICK :" + client.getNickname() + "\r\n";
+		client.appendToWriteBuffer(reply);
 
-        // (Note: Later when you build Channels, you will also need to broadcast this 'reply' string
-        // to every other person in their channels so their screens update too!)
-    }
+		// (Note: Later when you build Channels, you will also need to broadcast this 'reply' string
+		// to every other person in their channels so their screens update too!)
+	}
 
-    return;
+	return;
 }
 
-void    Commands::handleUser(Server& serv, Client& client, Parser& cmd) {
+void	Commands::handleUser(Server& serv, Client& client, Parser& cmd) {
 
-    (void)serv;
+	(void)serv;
 
-    if (!client.isAuthenticated()) {
-        std::string reply = IRC::Reply::errNotRegistered(client.getNickname());
-        client.appendToWriteBuffer(reply);
-        return;
-    }
+	if (!client.isAuthenticated()) {
+		std::string reply = IRC::Reply::errNotRegistered(client.getNickname());
+		client.appendToWriteBuffer(reply);
+		return;
+	}
 
-    if (!client.getUsername().empty()) {
-        std::string reply = IRC::Reply::errAlreadyRegistered(client.getNickname());
-        client.appendToWriteBuffer(reply);
-        return;
-    }
+	if (!client.getUsername().empty()) {
+		std::string reply = IRC::Reply::errAlreadyRegistered(client.getNickname());
+		client.appendToWriteBuffer(reply);
+		return;
+	}
 
-    if (cmd.getParams().size() < 4) { // USER command must have params:  <username> <unused mode> <unused server name> <realname>
+	if (cmd.getParams().size() < 4) { // USER command must have params:  <username> <unused mode> <unused server name> <realname>
 
-        std::string reply = IRC::Reply::errNeedMoreParams(client.getNickname(), cmd.getCommand());
-        client.appendToWriteBuffer(reply);
-        return;
-    }
+		std::string reply = IRC::Reply::errNeedMoreParams(client.getNickname(), cmd.getCommand());
+		client.appendToWriteBuffer(reply);
+		return;
+	}
 
-    client.setUsername(cmd.getParams()[0]);
-    // just ignore the unused params.
-    client.setRealname(cmd.getParams()[3]);
+	client.setUsername(cmd.getParams()[0]);
+	// just ignore the unused params.
+	client.setRealname(cmd.getParams()[3]);
 
-    if (client.isRegistered()) {
-        std::string welcomeMsg = IRC::Reply::welcome(client.getNickname(), client.getUsername(), client.getHostname());
-        client.appendToWriteBuffer(welcomeMsg);
-    }
+	if (client.isRegistered()) {
+		std::string welcomeMsg = IRC::Reply::welcome(client.getNickname(), client.getUsername(), client.getHostname());
+		client.appendToWriteBuffer(welcomeMsg);
+	}
 
-    return;
+	return;
 }
 
 
@@ -119,82 +119,82 @@ void    Commands::handleUser(Server& serv, Client& client, Parser& cmd) {
 // PING <token>
 void Commands::handlePing(Server& serv, Client& client, Parser& cmd) {
 
-    (void)serv;
-    if (cmd.getParams().empty()) {
-        std::string reply = IRC::Reply::errNoOrigin(client.getNickname());
-        client.appendToWriteBuffer(reply);
-        return;
-    }
+	(void)serv;
+	if (cmd.getParams().empty()) {
+		std::string reply = IRC::Reply::errNoOrigin(client.getNickname());
+		client.appendToWriteBuffer(reply);
+		return;
+	}
 
-    std::string reply = "PONG :" + std::string(cmd.getParams()[0]) + "\r\n";
-    client.appendToWriteBuffer(reply);
+	std::string reply = "PONG :" + std::string(cmd.getParams()[0]) + "\r\n";
+	client.appendToWriteBuffer(reply);
 }
 
 // PONG <token>
 void Commands::handlePong(Server& serv, Client& client, Parser& cmd) {
 
-    (void)serv;
-    (void)cmd;
-    std::cout << "Received PONG from client on socket " << client.getSocket() << "\n";
+	(void)serv;
+	(void)cmd;
+	std::cout << "Received PONG from client on socket " << client.getSocket() << "\n";
 }
 
 // QUIT [Quit Message]
 void Commands::handleQuit(Server& serv, Client& client, Parser& cmd) {
 
-    (void)serv;
-    std::string reason = "Client quit";
-    if (!cmd.getParams().empty()) {
-        reason = std::string(cmd.getParams()[0]);
-    }
+	(void)serv;
+	std::string reason = "Client quit";
+	if (!cmd.getParams().empty()) {
+		reason = std::string(cmd.getParams()[0]);
+	}
 
-    std::string reply = "ERROR :Closing Link: (" + reason + ")\r\n";
-    client.appendToWriteBuffer(reply);
-    client.setShouldDisconnect(true);
+	std::string reply = "ERROR :Closing Link: (" + reason + ")\r\n";
+	client.appendToWriteBuffer(reply);
+	client.setShouldDisconnect(true);
 
-    std::cout << "Client on socket " << client.getSocket() << " is quitting: " << reason << "\n";
+	std::cout << "Client on socket " << client.getSocket() << " is quitting: " << reason << "\n";
 }
 
 // PRIVMSG <target> <message>
 void Commands::handlePrivMsg(Server& serv, Client& client, Parser& cmd) {
 
-    // 1. Check for missing target
-    if (cmd.getParams().empty()) {
-        std::string reply = IRC::Reply::errNeedMoreParams(client.getNickname(), cmd.getCommand());
-        client.appendToWriteBuffer(reply);
-        return;
-    }
+	// 1. Check for missing target
+	if (cmd.getParams().empty()) {
+		std::string reply = IRC::Reply::errNeedMoreParams(client.getNickname(), cmd.getCommand());
+		client.appendToWriteBuffer(reply);
+		return;
+	}
 
-    // 2. Check for missing message text
-    if (cmd.getParams().size() < 2 || cmd.getParams()[1].empty()) {
-        std::string reply = "412 " + client.getNickname() + " :No text to send\r\n";
-        client.appendToWriteBuffer(reply);
-        return;
-    }
+	// 2. Check for missing message text
+	if (cmd.getParams().size() < 2 || cmd.getParams()[1].empty()) {
+		std::string reply = "412 " + client.getNickname() + " :No text to send\r\n";
+		client.appendToWriteBuffer(reply);
+		return;
+	}
 
-    std::string target = std::string(cmd.getParams()[0]);
-    std::string message = std::string(cmd.getParams()[1]);
+	std::string target = std::string(cmd.getParams()[0]);
+	std::string message = std::string(cmd.getParams()[1]);
 
-    // Phase 1 Block: Reject channel messages temporarily
-    if (target[0] == '#') {
-        std::string reply = "403 " + client.getNickname() + " " + target + " :No such channel\r\n";
-        client.appendToWriteBuffer(reply);
-        return;
-    }
+	// Phase 1 Block: Reject channel messages temporarily
+	if (target[0] == '#') {
+		std::string reply = "403 " + client.getNickname() + " " + target + " :No such channel\r\n";
+		client.appendToWriteBuffer(reply);
+		return;
+	}
 
-    // 3. Find the target user
-    Client* targetClient = serv.getClientByNick(target);
+	// 3. Find the target user
+	Client* targetClient = serv.getClientByNick(target);
 
-    // 4. Handle user not found
-    if (!targetClient) {
-        std::string reply = "401 " + client.getNickname() + " " + target + " :No such nick/channel\r\n";
-        client.appendToWriteBuffer(reply);
-        return;
-    }
+	// 4. Handle user not found
+	if (!targetClient) {
+		std::string reply = "401 " + client.getNickname() + " " + target + " :No such nick/channel\r\n";
+		client.appendToWriteBuffer(reply);
+		return;
+	}
 
-    // 5. Forward the exact IRC string to the receiving client's buffer
-    std::string forwardMsg = ":" + client.getNickname() + "!" + client.getUsername() + 
-                             "@" + client.getHostname() + " PRIVMSG " + target + 
-                             " :" + message + "\r\n";
-                             
-    targetClient->appendToWriteBuffer(forwardMsg);
+	// 5. Forward the exact IRC string to the receiving client's buffer
+	std::string forwardMsg = ":" + client.getNickname() + "!" + client.getUsername() + 
+							 "@" + client.getHostname() + " PRIVMSG " + target + 
+							 " :" + message + "\r\n";
+							 
+	targetClient->appendToWriteBuffer(forwardMsg);
 }
