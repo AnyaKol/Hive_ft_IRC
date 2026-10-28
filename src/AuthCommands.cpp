@@ -33,6 +33,7 @@ void Commands::handlePass(Server& serv, Client& client, Parser& cmd) {
     }
 }
 
+// NICK <nickname>
 void Commands::handleNick(Server& serv, Client& client, Parser& cmd) {
 
     if (cmd.getParams().empty()) {
@@ -78,6 +79,7 @@ void Commands::handleNick(Server& serv, Client& client, Parser& cmd) {
     return;
 }
 
+// USER <username> <mode> <unused> <realname>
 void    Commands::handleUser(Server& serv, Client& client, Parser& cmd) {
 
     (void)serv;
@@ -112,8 +114,6 @@ void    Commands::handleUser(Server& serv, Client& client, Parser& cmd) {
 
     return;
 }
-
-
 
 // PING <token>
 void Commands::handlePing(Server& serv, Client& client, Parser& cmd) {

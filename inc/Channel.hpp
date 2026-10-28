@@ -1,62 +1,101 @@
 #pragma once
 
+//Commands
+#include "Invite.hpp"
+#include "Join.hpp"
+#include "Kick.hpp"
+#include "Mode.hpp"
+#include "Names.hpp"
+#include "Part.hpp"
+#include "Topic.hpp"
+
+#include <iostream>
 #include <string>
 #include <string_view>
-#include <set>
+#include <unordered_set>
 
+class Server;
 class Client;
 
-/* Channel name may not contain any spaces (' ', 0x20), a control G / BELL
- * ('^G', 0x07), or a comma (',', 0x2C)
- * Channel name prefix may be:
- * 	('#', 0x23) - regular channel; known to all servers that are connected to
- * 	the network
- * 	('&', 0x26) - local channels; the clients connected can only see and talk
- * 	to other clients on the same server
- */
-class Channel{
+class Channel {
 
-	private:
-		std::string	_name;
-		std::string	_topic;
-		std::string	_key;
-		std::size_t	_userLimit;
+    private:
+        std::string _name;
+        std::string _topic;
+        std::string _key;
+        std::size_t _userLimit;
 
-		std::set<Client*>	_operators{};
-		std::set<Client*>	_members{};
-		std::set<Client*>	_pendingInvites{};
+        std::unordered_set<Client*> _operators{};
+        std::unordered_set<Client*> _members{};
+        std::unordered_set<Client*> _pendingInvites{};
 
-		bool	_inviteOnly = false;
-		bool	_protectedTopic = false;
-		bool	_hasKey = false;
-		bool	_hasUserLimit = false;
+        bool    _inviteOnly = false;
+        bool    _protectedTopic = false;
+        bool    _hasKey = false;
+        bool    _hasUserLimit = false;
 
-	public:
-		Channel(void) = delete;
-		Channel(std::string_view name, Client& creator);
-		Channel(const Channel&) = delete;
-		~Channel(void) = default;
+    public:
+        Channel(void) = delete;
+        Channel(std::string_view name, Client& creator);
+        Channel(const Channel&) = delete;
+        ~Channel(void) = default;
 
-		Channel&		operator=(const Channel&) = delete;
+        Channel&    operator=(const Channel&) = delete;
 
-		typedef std::set<Client*>::iterator	iterator;
+        typedef std::unordered_set<Client*>::iterator   iterator;
 
-		void			addMember(Client& client);
-		void			addOperator(Client& client);
-		void			removeMember(Client& client);
-		void			removeOperator(Client& client);
-		void			memberToOperator(Client& client);
-		void			operatorToMember(Client& client);
-		void			changeMode(char mode, bool value);
+        void    addMember(Client& client);
+        void    addOperator(Client& client);
+        void    removeMember(Client& client);
+        void    removeOperator(Client& client);
+        void    memberToOperator(Client& client);
+        void    operatorToMember(Client& client);
+        void    changeMode(char mode, bool value);
 
-		bool			isFull(void) const;
+        void    publicMessage(const std::string& msg) const;
 
-		std::string&	getName(void) const;
-		std::string&	getTopic(void) const;
-		std::size_t		getUserLimit(void) const;
+        bool    isFull(void) const;
 
-		void	setName(std::string_view name);
-		void	setTopic(std::string_view topic);
-		void	setUserLimit(std::size_t members);
+        std::string_view                    getName(void) const;
+        std::string_view                    getTopic(void) const;
+        std::size_t                         getUserLimit(void) const;
+        const std::unordered_set<Client*>&  getOperators(void) const { return _operators; }
+        const std::unordered_set<Client*>&  getMembers(void) const { return _members; }
+        bool                                isTopicProtected(void) const { return _protectedTopic; }
 
+        void    setName(std::string_view name);
+        void    setTopic(std::string_view topic, Client& client);
+        void    setUserLimit(std::size_t members);
+
+        //Commands
+        static bool             isChannelCommand(std::unordered_set<Channel*>& channels,
+            const Client& client, const std::string& command,
+            const std::vector<std::string_view>& params);
+        static AChannelCommand* makeCommand(const std::string& command);
+        static int              makeCommandNumber(const std::string& command);
+
+        //Exceptions
+        static const std::string    ERR_CHANNEL_NOT_FOUND;
+
+        class   NotChannelCommandException;
+        class   NameException;
+};
+
+//Exceptions
+class   Channel::NotChannelCommandException : public std::exception {
+    private:
+        static const std::string    _msg;
+    public:
+        NotChannelCommandException() = default;
+        ~NotChannelCommandException() = default;
+        const char* what(void) const noexcept override;
+};
+
+class   Channel::NameException : public std::exception {
+    private:
+        NameException(void) = delete;
+        std::string _msg;
+    public:
+        NameException(const std::string& message, std::string_view name);
+        const char* what(void) const noexcept override;
 };
