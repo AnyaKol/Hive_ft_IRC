@@ -74,10 +74,48 @@ void	Channel::setUserLimit(std::size_t limit) {
 void	Channel::addMember(Client& client) {
 	std::pair<iterator, bool>	result;
 
+	if (this->_hasKey) {
+		//print error Need key
+		return;
+	}
 	if (this->isFull()) {
 		//print error
 		return;
 	}
+	if (this->_inviteOnly) {
+		if ( !this->_pendingInvites.contains(client.getUsername()) ) {
+			//print error User not invited
+			return;
+		}
+		this->_pendingInvites.erase(this->_pendingInvites.find(client.getUsername()));//Remove from invites
+	}
+
+	result = this->_members.insert(&client);
+	if (!result.second) {
+		//print error Client already joined
+		return;
+	}
+}
+
+void	Channel::addMember(Client& client, std::string_view& key) {
+	std::pair<iterator, bool>	result;
+
+	if (this->_key != key)  {
+		//print error Keys do not mach
+		return;
+	}
+	if (this->isFull()) {
+		//print error
+		return;
+	}
+	if (this->_inviteOnly) {
+		if ( !this->_pendingInvites.contains(client.getUsername()) ) {
+			//print error User not invited
+			return;
+		}
+		this->_pendingInvites.erase(this->_pendingInvites.find(client.getUsername()));//Remove from invites
+	}
+
 	result = this->_members.insert(&client);
 	if (!result.second) {
 		//print error Client already joined
@@ -187,19 +225,21 @@ void	Channel::publicMessage(const std::string& msg) const {
 
 // Commands
 bool	Channel::isChannelCommand(std::unordered_set<Channel*>& channels,
-			const Client& client, const std::string& command,
+			Client& client, const std::string& command,
 			const std::vector<std::string_view>& params) {
 
 	try {
-		std::unique_ptr<AChannelCommand> cmd( makeCommand(command) );
-		cmd->execute(channels, client, params);
-	} catch (std::exception &e) {//Need to specify what exceptions
+		std::unique_ptr<AChannelCommand> cmd( makeCommand(command, client, channels) );
+		cmd->execute(params);
+	} catch (std::exception &e) {//Need to specify exceptions of class Channel
 		return (false);
 	}
 	return (true);
 }
 
-AChannelCommand*	Channel::makeCommand(const std::string& command) {
+AChannelCommand*	Channel::makeCommand(const std::string& command, Client& client,
+	std::unordered_set<Channel*>& channels) {
+
 	enum		allCommands {
 		INVITE,
 		JOIN,
@@ -213,21 +253,21 @@ AChannelCommand*	Channel::makeCommand(const std::string& command) {
 
 	switch (commandNumber) {
 		case allCommands::INVITE:
-			return (new Invite());
+			return (new Invite(client, channels));
 		case allCommands::JOIN:
-			return (new Join());
+			return (new Join(client, channels));
 		case allCommands::KICK:
-			return (new Kick());
+			return (new Kick(client, channels));
 		case allCommands::MODE:
-			return (new Mode());
+			return (new Mode(client, channels));
 		case allCommands::NAMES:
-			return (new Names());
+			return (new Names(client, channels));
 		case allCommands::PART:
-			return (new Part());
+			return (new Part(client, channels));
 		case allCommands::TOPIC:
-			return (new Topic());
+			return (new Topic(client, channels));
 		default:
-			throw (NotChannelCommandException());
+			throw (Exception(ERR_NOT_CHANNEL_COMMAND));
 	}
 }
 
@@ -258,13 +298,15 @@ int	Channel::makeCommandNumber(const std::string& command) {
 
 //TODO: Move exceptions to different file
 //Exceptions
-const std::string Channel::NotChannelCommandException::_msg
-	= "Not a channel command.";
+Channel::Exception::Exception(const std::string& message) {
+	this->_msg = message;
+}
 
-const char*	Channel::NotChannelCommandException::what(void) const noexcept {
+const char*	Channel::Exception::what(void) const noexcept {
 	return (this->_msg.c_str());
 }
 
+//Name exceptions
 Channel::NameException::NameException(const std::string& message,
 std::string_view name) {
 	this->_msg = message;
@@ -277,5 +319,9 @@ const char*	Channel::NameException::what(void) const noexcept {
 	return (this->_msg.c_str());
 }
 
-// NameException, no '.' at the end
+// Exception messages
+const std::string	Channel::ERR_NOT_CHANNEL_COMMAND = "Not a channel command.";
+const std::string	Channel::ERR_WRONG_NUM_PARAM = "Wrong number of parameters for command.";
+
+// NameException messages, no '.' at the end
 const std::string	Channel::ERR_CHANNEL_NOT_FOUND = "No channel with name";

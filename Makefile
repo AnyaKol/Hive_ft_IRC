@@ -19,6 +19,7 @@ SRCS = src/main.cpp \
 		src/CommandHandler.cpp \
 		src/AuthCommands.cpp \
 		src/Channel.cpp \
+		src/channelCommands/AChannelCommand.cpp \
 		src/channelCommands/Invite.cpp \
 		src/channelCommands/Join.cpp \
 		src/channelCommands/Kick.cpp \

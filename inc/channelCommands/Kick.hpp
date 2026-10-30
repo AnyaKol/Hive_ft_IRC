@@ -7,14 +7,14 @@
  */
 class Kick : public virtual AChannelCommand {
 	private:
+		Kick(void) = delete;
 
 	public:
-		Kick(void) = default;
+		Kick(Client& client, std::unordered_set<Channel*>& channels);
 		Kick(const Kick&) = delete;
-		~Kick(void) = default;
+		~Kick(void) {};
 
 		Kick&	operator=(const Kick&) = delete;
 
-		void	execute(std::unordered_set<Channel*>& channels,
-			const Client& client, const std::vector<std::string_view>& params) override;
+		void	execute(const std::vector<std::string_view>& params) override;
 };

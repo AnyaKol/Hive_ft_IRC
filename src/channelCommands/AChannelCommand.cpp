@@ -1,6 +1,11 @@
 #include "AChannelCommand.hpp"
 #include "Channel.hpp"
 
+#include <ranges>
+
+AChannelCommand::AChannelCommand(Client& client, std::unordered_set<Channel*>& channels)
+: executor{client}, allChannels{channels} {}
+
 /*
 Finds channel with given name. Throws exception if not found.
 
@@ -8,12 +13,13 @@ Finds channel with given name. Throws exception if not found.
 												server.
 @param	const std::string_view		channelName	name of channel to find.
 
-@returns	const Channel*  returns pointer to object of class Channel; if no
-							channel was found - throws exception with
-							ERR_CHANNEL_NOT_FOUND message.
+@returns	Channel*	returns pointer to object of class Channel; if no
+						channel was found - throws exception with
+						ERR_CHANNEL_NOT_FOUND message.
 */
-const Channel*	AChannelCommand::findChannel(const std::unordered_set<Channel*>& channels,
+Channel*	AChannelCommand::findChannel(const std::unordered_set<Channel*>& channels,
 	const std::string_view& channelName) {
+
 	for (Channel* channel : channels) {
 		std::string_view name = channel->getName();
 
@@ -21,4 +27,16 @@ const Channel*	AChannelCommand::findChannel(const std::unordered_set<Channel*>& 
 			return (channel);
 	};
 	throw (Channel::NameException(Channel::ERR_CHANNEL_NOT_FOUND, channelName));
+}
+
+std::vector<std::string_view>	AChannelCommand::splitByCommas(
+	const std::string_view& paramWithCommas) {
+
+	std::vector<std::string_view>	paramVector {};
+	auto range = std::views::split(paramWithCommas, ",");
+
+	for (const auto& param : range) {
+		paramVector.push_back( std::string_view(param.begin(), param.end()) );
+	}
+	return (paramVector);
 }

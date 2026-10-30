@@ -1,10 +1,10 @@
 #include "Topic.hpp"
 #include <iostream>
 
-void	Topic::execute(std::unordered_set<Channel*>& channels,
-	const Client& client, const std::vector<std::string_view>& params) {
-	(void) channels;
-	(void) client;
+Topic::Topic(Client& client, std::unordered_set<Channel*>& channels)
+: AChannelCommand(client, channels) {}
+
+void	Topic::execute(const std::vector<std::string_view>& params) {
 	(void) params;
 
 	std::cout << "Topic command message" << std::endl;

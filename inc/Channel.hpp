@@ -22,12 +22,12 @@ class Channel {
 	private:
 		std::string	_name;
 		std::string	_topic;
-		std::string	_key;
+		std::string_view	_key;
 		std::size_t	_userLimit;
 
-		std::unordered_set<Client*>	_operators{};
-		std::unordered_set<Client*>	_members{};
-		std::unordered_set<Client*>	_pendingInvites{};
+		std::unordered_set<Client*>		_operators {};
+		std::unordered_set<Client*>		_members {};
+		std::unordered_set<std::string>	_pendingInvites {};
 
 		bool	_inviteOnly = false;
 		bool	_protectedTopic = false;
@@ -45,6 +45,7 @@ class Channel {
 		typedef std::unordered_set<Client*>::iterator	iterator;
 
 		void	addMember(Client& client);
+		void	addMember(Client& client, std::string_view& key);
 		void	addOperator(Client& client);
 		void	removeMember(Client& client);
 		void	removeOperator(Client& client);
@@ -66,25 +67,30 @@ class Channel {
 
 		//Commands
 		static bool				isChannelCommand(std::unordered_set<Channel*>& channels,
-			const Client& client, const std::string& command,
+			Client& client, const std::string& command,
 			const std::vector<std::string_view>& params);
-		static AChannelCommand*	makeCommand(const std::string& command);
+		static AChannelCommand*	makeCommand(const std::string& command, Client& client,
+			std::unordered_set<Channel*>& channels);
 		static int				makeCommandNumber(const std::string& command);
 
-		//Exceptions
+		//Exception messages
+		static const std::string	ERR_NOT_CHANNEL_COMMAND;
+		static const std::string	ERR_WRONG_NUM_PARAM;
+
+		//NameException messages
 		static const std::string	ERR_CHANNEL_NOT_FOUND;
 
-		class	NotChannelCommandException;
+		class	Exception;
 		class	NameException;
 };
 
 //Exceptions
-class	Channel::NotChannelCommandException : public std::exception {
+class	Channel::Exception : public std::exception {
 	private:
-		static const std::string	_msg;
+		Exception(void) = delete;
+		std::string	_msg;
 	public:
-		NotChannelCommandException() = default;
-		~NotChannelCommandException() = default;
+		Exception(const std::string& message);
 		const char*	what(void) const noexcept override;
 };
 
