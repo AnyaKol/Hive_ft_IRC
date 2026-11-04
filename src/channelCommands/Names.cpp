@@ -1,16 +1,12 @@
 #include "Names.hpp"
+#include "Channel.hpp"
 
 Names::Names(Client& client, std::unordered_set<Channel*>& channels)
 : AChannelCommand(client, channels) {}
 
-void	Names::execute(const std::vector<std::string_view>& params) {}
+void	Names::execute(const std::vector<std::string_view>& params) {
 
-
-
-void	Names::execute(std::unordered_set<Channel*>& channels,
-	const Client& client, const std::vector<std::string_view>& params) {
-
-	Client& mutableClient = const_cast<Client&>(client);
+	Client& mutableClient = const_cast<Client&>(this->AChannelCommand::executor);
 	std::string nick = mutableClient.getNickname();
 
 	// Check for required parameters
@@ -23,7 +19,7 @@ void	Names::execute(std::unordered_set<Channel*>& channels,
 	Channel* targetChannel = nullptr;
 
 	// Search for the target channel in the server's channels set
-	for (Channel* chan : channels) {
+	for (Channel* chan : this->AChannelCommand::allChannels) {
 		if (chan->getName() == targetName) {
 			targetChannel = chan;
 			break;

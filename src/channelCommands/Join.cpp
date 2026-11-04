@@ -1,19 +1,13 @@
 #include "Join.hpp"
-<<<<<<< HEAD
 #include "Channel.hpp"
-
-#include <iostream>
 
 Join::Join(Client& client, std::unordered_set<Channel*>& channels)
 : AChannelCommand(client, channels) {}
-=======
->>>>>>> antor
 
 /* Command: JOIN
  * Parameters: <channel>{,<channel>} [<key>{,<key>}]
  * Alt Params: 0
  */
-<<<<<<< HEAD
  // Servers may validate the <key> value, eg. to forbid spaces; can forbid a <key> to start from channel name prefix ('#' or '&')
 /*
 	JOIN #channel1,#channel2,#channel3 key2,key3
@@ -62,18 +56,4 @@ void	Join::execute(const std::vector<std::string_view>& params) {
 	} catch (std::exception &e) {//Need to specify exceptions of class Channel
 		this->AChannelCommand::executor.appendToWriteBuffer(e.what());//Send error message to executor client
 	}
-=======
-void	Join::execute(std::unordered_set<Channel*>& channels,
-	const Client& client, const std::vector<std::string_view>& params) {
-
-	(void) channels;
-	(void) client;
-	(void) params;
-
-	/*
-	JOIN #channel1,#channel2,#channel3 key2,key3
-	After parsing:
-	[#channel1] [#channel2] [#channel3] [key2] [key3]
-	*/
->>>>>>> antor
 }

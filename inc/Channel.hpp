@@ -20,25 +20,25 @@ class Client;
 class Channel {
 
 	private:
-		std::string	        _name;
-		std::string	        _topic;
+		std::string			_name;
+		std::string			_topic;
 		std::string_view	_key;
-		std::size_t	        _userLimit;
+		std::size_t			_userLimit;
 
 		std::unordered_set<Client*>		_operators {};
 		std::unordered_set<Client*>		_members {};
 		std::unordered_set<std::string>	_pendingInvites {};
 
-        bool    _inviteOnly = false;
-        bool    _protectedTopic = false;
-        bool    _hasKey = false;
-        bool    _hasUserLimit = false;
+		bool	_inviteOnly = false;
+		bool	_protectedTopic = false;
+		bool	_hasKey = false;
+		bool	_hasUserLimit = false;
 
-    public:
-        Channel(void) = delete;
-        Channel(std::string_view name, Client& creator);
-        Channel(const Channel&) = delete;
-        ~Channel(void) = default;
+	public:
+		Channel(void) = delete;
+		Channel(std::string_view name, Client& creator);
+		Channel(const Channel&) = delete;
+		~Channel(void) = default;
 
 		Channel&	operator=(const Channel&) = delete;
 
@@ -57,13 +57,14 @@ class Channel {
 
 		bool	isFull(void) const;
 
-		std::string_view	getName(void) const;
-		std::string_view	getTopic(void) const;
-		std::size_t			getUserLimit(void) const;
+		//Getters
+		const std::string&	getName(void) const { return (this->_name); };
+		const std::string&	getTopic(void) const { return (this->_topic); };
+		const std::size_t&	getUserLimit(void) const { return (this->_userLimit); };
+		bool				isTopicProtected(void) const { return (this->_protectedTopic); };
 
-        const std::unordered_set<Client*>&  getOperators(void) const { return _operators; }//
-        const std::unordered_set<Client*>&  getMembers(void) const { return _members; }//
-        bool                                isTopicProtected(void) const { return _protectedTopic; }//
+		const std::unordered_set<Client*>&	getOperators(void) const { return (this->_operators); };
+		const std::unordered_set<Client*>&	getMembers(void) const { return (this->_members); };
 
 		void	setName(std::string_view name);
 		void	setTopic(std::string_view topic, Client& client);

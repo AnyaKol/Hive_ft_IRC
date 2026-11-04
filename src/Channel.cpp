@@ -25,19 +25,6 @@ Channel::Channel(std::string_view name, Client& creator) {
 	this->addOperator(creator);
 }
 
-//Getters
-std::string_view	Channel::getName(void) const {
-	return( this->_name );
-}
-
-std::string_view	Channel::getTopic(void) const {
-	return( this->_topic );
-}
-
-std::size_t Channel::getUserLimit(void) const {
-	return( this->_userLimit );
-}
-
 //Setters
 void	Channel::setName(std::string_view name) {
 	if (name.empty()) {

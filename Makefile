@@ -9,7 +9,6 @@ RESET = \033[0m
 NAME = ircserv
 
 CXX ?= c++
-<<<<<<< HEAD
 CXXFLAGS = -Wall -Wextra -Werror -std=c++20 -I./inc -I./inc/channelCommands
 DEPFLAGS = -MMD -MP
 
@@ -28,18 +27,6 @@ SRCS = src/main.cpp \
 		src/channelCommands/Names.cpp \
 		src/channelCommands/Part.cpp \
 		src/channelCommands/Topic.cpp \
-=======
-CXXFLAGS = -Wall -Wextra -Werror -std=c++20 -I./inc
-DEPFLAGS = -MMD -MP
-
-SRCS = src/main.cpp \
-       src/Server.cpp \
-       src/Parser.cpp \
-       src/Client.cpp \
-	   src/CommandHandler.cpp \
-	   src/AuthCommands.cpp
-#        zsrc/Channel.cpp \
->>>>>>> antor
 
 OBJ_DIR = obj/
 

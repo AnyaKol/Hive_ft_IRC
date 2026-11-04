@@ -1,15 +1,12 @@
 #include "Topic.hpp"
+#include "Channel.hpp"
 
 Topic::Topic(Client& client, std::unordered_set<Channel*>& channels)
 : AChannelCommand(client, channels) {}
 
-void	Topic::execute(const std::vector<std::string_view>& params) {}
+void	Topic::execute(const std::vector<std::string_view>& params) {
 
-
-void	Topic::execute(std::unordered_set<Channel*>& channels,
-	const Client& client, const std::vector<std::string_view>& params) {
-
-	Client& mutableClient = const_cast<Client&>(client);
+	Client& mutableClient = const_cast<Client&>(this->AChannelCommand::executor);
 	std::string nick = mutableClient.getNickname();
 
 	// Check for required parameters
@@ -22,7 +19,7 @@ void	Topic::execute(std::unordered_set<Channel*>& channels,
 	Channel* targetChannel = nullptr;
 
 	// Search for the target channel in the server's channels set
-	for (Channel* chan : channels) {
+	for (Channel* chan : this->AChannelCommand::allChannels) {
 		if (chan->getName() == targetName) {
 			targetChannel = chan;
 			break;
@@ -67,5 +64,4 @@ void	Topic::execute(std::unordered_set<Channel*>& channels,
 
 	std::string broadcastMsg = ":" + nick + " TOPIC " + targetName + " :" + std::string(newTopic) + "\r\n";
 	targetChannel->publicMessage(broadcastMsg);
->>>>>>> antor
 }
