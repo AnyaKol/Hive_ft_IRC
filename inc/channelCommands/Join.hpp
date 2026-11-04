@@ -14,7 +14,7 @@ class Join : public virtual AChannelCommand {
 		std::vector<std::string_view>	keys {};
 
 	public:
-		Join(Client& client, std::unordered_set<Channel*>& channels);
+		Join(Client& client, std::set<Channel>& channels);
 		Join(const Join&) = delete;
 		~Join(void) {};
 

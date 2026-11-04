@@ -10,7 +10,7 @@ class Invite : public virtual AChannelCommand {
 		Invite(void) = delete;
 
 	public:
-		Invite(Client& client, std::unordered_set<Channel*>& channels);
+		Invite(Client& client, std::set<Channel>& channels);
 		Invite(const Invite&) = delete;
 		~Invite(void) {};
 

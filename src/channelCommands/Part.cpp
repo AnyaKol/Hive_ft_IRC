@@ -3,7 +3,7 @@
 
 #include <iostream>
 
-Part::Part(Client& client, std::unordered_set<Channel*>& channels)
+Part::Part(Client& client, std::set<Channel>& channels)
 : AChannelCommand(client, channels) {}
 
 void	Part::execute(const std::vector<std::string_view>& params) {

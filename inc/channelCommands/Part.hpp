@@ -10,7 +10,7 @@ class Part : public virtual AChannelCommand {
 		Part(void) = delete;
 
 	public:
-		Part(Client& client, std::unordered_set<Channel*>& channels);
+		Part(Client& client, std::set<Channel>& channels);
 		Part(const Part&) = delete;
 		~Part(void) {};
 

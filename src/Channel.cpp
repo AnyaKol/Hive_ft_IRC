@@ -25,6 +25,10 @@ Channel::Channel(std::string_view name, Client& creator) {
 	this->addOperator(creator);
 }
 
+bool	Channel::operator<(const Channel& other) const {
+	return (this->_name < other._name);
+}
+
 //Setters
 void	Channel::setName(std::string_view name) {
 	if (name.empty()) {
@@ -211,7 +215,7 @@ void	Channel::publicMessage(const std::string& msg) const {
 }
 
 // Commands
-bool	Channel::isChannelCommand(std::unordered_set<Channel*>& channels,
+bool	Channel::isChannelCommand(std::set<Channel>& channels,
 			Client& client, const std::string& command,
 			const std::vector<std::string_view>& params) {
 
@@ -225,7 +229,7 @@ bool	Channel::isChannelCommand(std::unordered_set<Channel*>& channels,
 }
 
 AChannelCommand*	Channel::makeCommand(const std::string& command, Client& client,
-	std::unordered_set<Channel*>& channels) {
+	std::set<Channel>& channels) {
 
 	enum		allCommands {
 		INVITE,
@@ -311,4 +315,4 @@ const std::string	Channel::ERR_NOT_CHANNEL_COMMAND = "Not a channel command.";
 const std::string	Channel::ERR_WRONG_NUM_PARAM = "Wrong number of parameters for command.";
 
 // NameException messages, no '.' at the end
-const std::string	Channel::ERR_CHANNEL_NOT_FOUND = "No channel with name";
+const std::string	Channel::ERR_CREATE_CHANNEL = "Could not create a channel wth name ";

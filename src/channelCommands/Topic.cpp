@@ -1,7 +1,7 @@
 #include "Topic.hpp"
 #include "Channel.hpp"
 
-Topic::Topic(Client& client, std::unordered_set<Channel*>& channels)
+Topic::Topic(Client& client, std::set<Channel>& channels)
 : AChannelCommand(client, channels) {}
 
 void	Topic::execute(const std::vector<std::string_view>& params) {
@@ -19,9 +19,9 @@ void	Topic::execute(const std::vector<std::string_view>& params) {
 	Channel* targetChannel = nullptr;
 
 	// Search for the target channel in the server's channels set
-	for (Channel* chan : this->AChannelCommand::allChannels) {
-		if (chan->getName() == targetName) {
-			targetChannel = chan;
+	for (const Channel& chan : this->AChannelCommand::allChannels) {
+		if (chan.getName() == targetName) {
+			targetChannel = &const_cast<Channel&>(chan);
 			break;
 		}
 	}

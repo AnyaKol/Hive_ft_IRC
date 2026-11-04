@@ -3,7 +3,7 @@
 
 #include <iostream>
 
-Invite::Invite(Client& client, std::unordered_set<Channel*>& channels)
+Invite::Invite(Client& client, std::set<Channel>& channels)
 : AChannelCommand(client, channels) {}
 
 void	Invite::execute(const std::vector<std::string_view>& params) {

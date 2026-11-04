@@ -1,7 +1,7 @@
 #include "Join.hpp"
 #include "Channel.hpp"
 
-Join::Join(Client& client, std::unordered_set<Channel*>& channels)
+Join::Join(Client& client, std::set<Channel>& channels)
 : AChannelCommand(client, channels) {}
 
 /* Command: JOIN
@@ -36,21 +36,21 @@ void	Join::execute(const std::vector<std::string_view>& params) {
 	try {
 		if (this->keys.size() > 0) {
 			for (std::string_view channelName : this->channels) {
-				Channel* channel = AChannelCommand::findChannel(this->AChannelCommand::allChannels, channelName);
+				Channel& channel = findChannel(channelName);
 				std::vector<std::string_view>::iterator nextKey = this->keys.begin();
 
 				if (*nextKey != "x")
-					channel->addMember(this->AChannelCommand::executor, *nextKey);
+					channel.addMember(this->AChannelCommand::executor, *nextKey);
 				else
-					channel->addMember(this->AChannelCommand::executor);
+					channel.addMember(this->AChannelCommand::executor);
 				if (nextKey < this->keys.end())
 					nextKey++;
 			}
 		} else {
 			for (std::string_view channelName : this->channels) {
-				Channel* channel = AChannelCommand::findChannel(this->AChannelCommand::allChannels, channelName);
+				Channel& channel = findChannel(channelName);
 				
-				channel->addMember(this->AChannelCommand::executor);
+				channel.addMember(this->AChannelCommand::executor);
 			}
 		}
 	} catch (std::exception &e) {//Need to specify exceptions of class Channel

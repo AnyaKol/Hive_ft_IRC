@@ -10,7 +10,7 @@ class Kick : public virtual AChannelCommand {
 		Kick(void) = delete;
 
 	public:
-		Kick(Client& client, std::unordered_set<Channel*>& channels);
+		Kick(Client& client, std::set<Channel>& channels);
 		Kick(const Kick&) = delete;
 		~Kick(void) {};
 
