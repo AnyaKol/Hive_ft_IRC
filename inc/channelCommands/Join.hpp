@@ -8,14 +8,17 @@
  */
 class Join : public virtual AChannelCommand {
 	private:
+		Join(void) = delete;
+
+		std::vector<std::string_view>	channels;
+		std::vector<std::string_view>	keys {};
 
 	public:
-		Join(void) = default;
+		Join(Client& client, std::unordered_set<Channel*>& channels);
 		Join(const Join&) = delete;
-		~Join(void) = default;
+		~Join(void) {};
 
 		Join&	operator=(const Join&) = delete;
 
-		void	execute(std::unordered_set<Channel*>& channels,
-			const Client& client, const std::vector<std::string_view>& params) override;
+		void	execute(const std::vector<std::string_view>& params) override;
 };

@@ -20,14 +20,14 @@ class Client;
 class Channel {
 
 	private:
-		std::string	_name;
-		std::string	_topic;
-		std::string	_key;
-		std::size_t	_userLimit;
+		std::string			_name;
+		std::string			_topic;
+		std::string_view	_key;
+		std::size_t			_userLimit;
 
-		std::unordered_set<Client*>	_operators{};
-		std::unordered_set<Client*>	_members{};
-		std::unordered_set<Client*>	_pendingInvites{};
+		std::unordered_set<Client*>		_operators {};
+		std::unordered_set<Client*>		_members {};
+		std::unordered_set<std::string>	_pendingInvites {};
 
 		bool	_inviteOnly = false;
 		bool	_protectedTopic = false;
@@ -45,6 +45,7 @@ class Channel {
 		typedef std::unordered_set<Client*>::iterator	iterator;
 
 		void	addMember(Client& client);
+		void	addMember(Client& client, std::string_view& key);
 		void	addOperator(Client& client);
 		void	removeMember(Client& client);
 		void	removeOperator(Client& client);
@@ -56,9 +57,14 @@ class Channel {
 
 		bool	isFull(void) const;
 
-		std::string_view	getName(void) const;
-		std::string_view	getTopic(void) const;
-		std::size_t			getUserLimit(void) const;
+		//Getters
+		const std::string&	getName(void) const { return (this->_name); };
+		const std::string&	getTopic(void) const { return (this->_topic); };
+		const std::size_t&	getUserLimit(void) const { return (this->_userLimit); };
+		bool				isTopicProtected(void) const { return (this->_protectedTopic); };
+
+		const std::unordered_set<Client*>&	getOperators(void) const { return (this->_operators); };
+		const std::unordered_set<Client*>&	getMembers(void) const { return (this->_members); };
 
 		void	setName(std::string_view name);
 		void	setTopic(std::string_view topic, Client& client);
@@ -66,25 +72,30 @@ class Channel {
 
 		//Commands
 		static bool				isChannelCommand(std::unordered_set<Channel*>& channels,
-			const Client& client, const std::string& command,
+			Client& client, const std::string& command,
 			const std::vector<std::string_view>& params);
-		static AChannelCommand*	makeCommand(const std::string& command);
+		static AChannelCommand*	makeCommand(const std::string& command, Client& client,
+			std::unordered_set<Channel*>& channels);
 		static int				makeCommandNumber(const std::string& command);
 
-		//Exceptions
+		//Exception messages
+		static const std::string	ERR_NOT_CHANNEL_COMMAND;
+		static const std::string	ERR_WRONG_NUM_PARAM;
+
+		//NameException messages
 		static const std::string	ERR_CHANNEL_NOT_FOUND;
 
-		class	NotChannelCommandException;
+		class	Exception;
 		class	NameException;
 };
 
 //Exceptions
-class	Channel::NotChannelCommandException : public std::exception {
+class	Channel::Exception : public std::exception {
 	private:
-		static const std::string	_msg;
+		Exception(void) = delete;
+		std::string	_msg;
 	public:
-		NotChannelCommandException() = default;
-		~NotChannelCommandException() = default;
+		Exception(const std::string& message);
 		const char*	what(void) const noexcept override;
 };
 

@@ -7,14 +7,14 @@
  */
 class Topic : public virtual AChannelCommand {
 	private:
+		Topic(void) = delete;
 
 	public:
-		Topic(void) = default;
+		Topic(Client& client, std::unordered_set<Channel*>& channels);
 		Topic(const Topic&) = delete;
-		~Topic(void) = default;
+		~Topic(void) {};
 
 		Topic&	operator=(const Topic&) = delete;
 
-		void	execute(std::unordered_set<Channel*>& channels,
-			const Client& client, const std::vector<std::string_view>& params) override;
+		void	execute(const std::vector<std::string_view>& params) override;
 };

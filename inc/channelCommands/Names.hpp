@@ -7,14 +7,14 @@
  */
 class Names : public virtual AChannelCommand {
 	private:
+		Names(void) = delete;
 
 	public:
-		Names(void) = default;
+		Names(Client& client, std::unordered_set<Channel*>& channels);
 		Names(const Names&) = delete;
-		~Names(void) = default;
+		~Names(void) {};
 
 		Names&	operator=(const Names&) = delete;
 
-		void	execute(std::unordered_set<Channel*>& channels,
-			const Client& client, const std::vector<std::string_view>& params) override;
+		void	execute(const std::vector<std::string_view>& params) override;
 };
