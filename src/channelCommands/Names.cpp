@@ -1,7 +1,7 @@
 #include "Names.hpp"
 #include "Channel.hpp"
 
-Names::Names(Client& client, std::set<Channel>& channels)
+Names::Names(Client& client, std::unordered_map<std::string, Channel>& channels)
 : AChannelCommand(client, channels) {}
 
 void	Names::execute(const std::vector<std::string_view>& params) {
@@ -18,13 +18,10 @@ void	Names::execute(const std::vector<std::string_view>& params) {
 	std::string targetName(params[0]);
 	const Channel* targetChannel = nullptr;
 
-	// Search for the target channel in the server's channels set
-	for (const Channel& chan : this->AChannelCommand::allChannels) {
-		if (chan.getName() == targetName) {
-			targetChannel = &chan;
-			break;
-		}
-	}
+	// Search for the target channel in the server's channels map
+	auto channelIt = this->AChannelCommand::allChannels.find(targetName);
+	if (channelIt != this->AChannelCommand::allChannels.end())
+		targetChannel = &channelIt->second;
 
 	// If channel does not exist, IRC protocol specifies sending end of NAMES
 	if (!targetChannel) {

@@ -1,7 +1,7 @@
 #include "Topic.hpp"
 #include "Channel.hpp"
 
-Topic::Topic(Client& client, std::set<Channel>& channels)
+Topic::Topic(Client& client, std::unordered_map<std::string, Channel>& channels)
 : AChannelCommand(client, channels) {}
 
 void	Topic::execute(const std::vector<std::string_view>& params) {
@@ -18,13 +18,10 @@ void	Topic::execute(const std::vector<std::string_view>& params) {
 	std::string targetName(params[0]);
 	Channel* targetChannel = nullptr;
 
-	// Search for the target channel in the server's channels set
-	for (const Channel& chan : this->AChannelCommand::allChannels) {
-		if (chan.getName() == targetName) {
-			targetChannel = &const_cast<Channel&>(chan);
-			break;
-		}
-	}
+	// Search for the target channel in the server's channels map
+	auto channelIt = this->AChannelCommand::allChannels.find(targetName);
+	if (channelIt != this->AChannelCommand::allChannels.end())
+		targetChannel = &channelIt->second;
 
 	// If channel does not exist, return error
 	if (!targetChannel) {
@@ -33,8 +30,8 @@ void	Topic::execute(const std::vector<std::string_view>& params) {
 	}
 
 	// Verify if the client is a member or operator of the channel
-	bool isOp = targetChannel->getOperators().contains(&mutableClient);
-	bool isMem = targetChannel->getMembers().contains(&mutableClient);
+	bool isOp = targetChannel->isOperator(mutableClient);
+	bool isMem = targetChannel->isMember(mutableClient);
 
 	if (!isOp && !isMem) {
 		mutableClient.appendToWriteBuffer("442 " + nick + " " + targetName + " :You're not on that channel\r\n");

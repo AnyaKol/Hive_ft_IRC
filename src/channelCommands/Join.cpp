@@ -1,7 +1,7 @@
 #include "Join.hpp"
 #include "Channel.hpp"
 
-Join::Join(Client& client, std::set<Channel>& channels)
+Join::Join(Client& client, std::unordered_map<std::string, Channel>& channels)
 : AChannelCommand(client, channels) {}
 
 /* Command: JOIN
@@ -17,7 +17,7 @@ Join::Join(Client& client, std::set<Channel>& channels)
 void	Join::execute(const std::vector<std::string_view>& params) {
 
 	//Check if no parameters given
-	if (params.size() != 1 || params.size() != 2)
+	if (params.size() != 1 && params.size() != 2)
 		throw (Channel::Exception(Channel::ERR_WRONG_NUM_PARAM));
 
 	//Print all params

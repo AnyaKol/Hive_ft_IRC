@@ -3,7 +3,7 @@
 
 #include <iostream>
 
-Mode::Mode(Client& client, std::set<Channel>& channels)
+Mode::Mode(Client& client, std::unordered_map<std::string, Channel>& channels)
 : AChannelCommand(client, channels) {}
 
 void	Mode::execute(const std::vector<std::string_view>& params) {

@@ -10,7 +10,7 @@ class Names : public virtual AChannelCommand {
 		Names(void) = delete;
 
 	public:
-		Names(Client& client, std::set<Channel>& channels);
+		Names(Client& client, std::unordered_map<std::string, Channel>& channels);
 		Names(const Names&) = delete;
 		~Names(void) {};
 

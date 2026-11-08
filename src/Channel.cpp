@@ -25,9 +25,6 @@ Channel::Channel(std::string_view name, Client& creator) {
 	this->addOperator(creator);
 }
 
-bool	Channel::operator<(const Channel& other) const {
-	return (this->_name < other._name);
-}
 
 //Setters
 void	Channel::setName(std::string_view name) {
@@ -65,6 +62,10 @@ void	Channel::setUserLimit(std::size_t limit) {
 void	Channel::addMember(Client& client) {
 	std::pair<iterator, bool>	result;
 
+	if (this->isMember(client) || this->isOperator(client)) {
+		//print error Client already on channel
+		return;
+	}
 	if (this->_hasKey) {
 		//print error Need key
 		return;
@@ -83,7 +84,7 @@ void	Channel::addMember(Client& client) {
 
 	result = this->_members.insert(&client);
 	if (!result.second) {
-		//print error Client already joined
+		//print error Insert fail
 		return;
 	}
 }
@@ -91,6 +92,10 @@ void	Channel::addMember(Client& client) {
 void	Channel::addMember(Client& client, std::string_view& key) {
 	std::pair<iterator, bool>	result;
 
+	if (this->isMember(client) || this->isOperator(client)) {
+		//print error Client already on channel
+		return;
+	}
 	if (this->_key != key)  {
 		//print error Keys do not mach
 		return;
@@ -109,7 +114,7 @@ void	Channel::addMember(Client& client, std::string_view& key) {
 
 	result = this->_members.insert(&client);
 	if (!result.second) {
-		//print error Client already joined
+		//print error Insert fail
 		return;
 	}
 }
@@ -144,6 +149,15 @@ void	Channel::memberToOperator(Client& client) {
 void	Channel::operatorToMember(Client& client) {
 	this->removeOperator(client);
 	this->addMember(client);
+}
+
+/* True if client is in _members / _operators */
+bool	Channel::isMember(Client& client) const {
+	return (this->_members.contains(&client));
+}
+
+bool	Channel::isOperator(Client& client) const {
+	return (this->_operators.contains(&client));
 }
 
 /* Channel modes:
@@ -215,7 +229,7 @@ void	Channel::publicMessage(const std::string& msg) const {
 }
 
 // Commands
-bool	Channel::isChannelCommand(std::set<Channel>& channels,
+bool	Channel::isChannelCommand(std::unordered_map<std::string, Channel>& channels,
 			Client& client, const std::string& command,
 			const std::vector<std::string_view>& params) {
 
@@ -229,7 +243,7 @@ bool	Channel::isChannelCommand(std::set<Channel>& channels,
 }
 
 AChannelCommand*	Channel::makeCommand(const std::string& command, Client& client,
-	std::set<Channel>& channels) {
+	std::unordered_map<std::string, Channel>& channels) {
 
 	enum		allCommands {
 		INVITE,

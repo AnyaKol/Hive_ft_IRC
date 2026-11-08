@@ -9,26 +9,24 @@ Throws exception if error occured (if channel with this name exists).
 
 @param	const std::string_view		channelName	name of channel to find.
 
-@returns	std::unique_ptr<Channel>&	finds or creates a new object of class
-			Channel and returns a pointer to it; if error occured - throws
-			exception with ERR_CREATE_CHANNEL message.
+@returns	Channel&	finds or creates an object of class Channel in the
+						server's unordered_map<std::string, Channel> and
+						returns a reference to it; if error occured - throws
+						exception with ERR_CREATE_CHANNEL message.
 */
 Channel&	AChannelCommand::findChannel(const std::string_view& channelName) {
 
-	for (const Channel& channel : this->allChannels) {
-		std::string_view name = channel.getName();
-
-		if (name == channelName)
-			return ( const_cast<Channel&>(channel) );
-	};
+	auto it = this->allChannels.find(std::string(channelName));
+	if (it != this->allChannels.end())
+		return (it->second);
 
 	//If no channel found - create new channel;
-	std::pair<iterator,bool> it = this->allChannels.insert(
-		Channel(channelName, this->executor)
+	auto inserted = this->allChannels.emplace(
+		std::string(channelName), Channel(channelName, this->executor)
 	);
-	if (!it.second)
+	if (!inserted.second)
 		throw (Channel::NameException(Channel::ERR_CREATE_CHANNEL, channelName));
-	return ( const_cast<Channel&>(*(it.first)) );
+	return (inserted.first->second);
 }
 
 std::vector<std::string_view>	AChannelCommand::splitByCommas( 

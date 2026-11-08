@@ -4,7 +4,8 @@
 
 #include <vector>
 #include <string_view>
-#include <set>
+#include <string>
+#include <unordered_map>
 
 class Channel;
 
@@ -17,13 +18,13 @@ class AChannelCommand {
 
 	public:
 		AChannelCommand(void) = delete;
-		AChannelCommand(Client& client, std::set<Channel>& channels) : executor(client), allChannels(channels) {};
+		AChannelCommand(Client& client, std::unordered_map<std::string, Channel>& channels) : executor(client), allChannels(channels) {};
 		virtual ~AChannelCommand(void) = default;
 
-		typedef std::set<Channel>::iterator	iterator;
+		typedef std::unordered_map<std::string, Channel>::iterator	iterator;
 
 		virtual void	execute(const std::vector<std::string_view>& params) = 0;
 		
 		Client&				executor;
-		std::set<Channel>&	allChannels;
+		std::unordered_map<std::string, Channel>&	allChannels;
 };

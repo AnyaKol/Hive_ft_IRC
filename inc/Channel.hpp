@@ -12,7 +12,8 @@
 #include <iostream>
 #include <string>
 #include <string_view>
-#include <set>
+#include <unordered_map>
+#include <unordered_set>
 
 class Server;
 class Client;
@@ -25,9 +26,9 @@ class Channel {
 		std::string_view	_key;
 		std::size_t			_userLimit;
 
-		std::set<Client*>		_operators {};
-		std::set<Client*>		_members {};
-		std::set<std::string>	_pendingInvites {};
+		std::unordered_set<Client*>		_operators {};
+		std::unordered_set<Client*>		_members {};
+		std::unordered_set<std::string>	_pendingInvites {};
 
 		bool	_inviteOnly = false;
 		bool	_protectedTopic = false;
@@ -39,11 +40,11 @@ class Channel {
 		Channel(std::string_view name, Client& creator);
 		Channel(const Channel&) = delete;
 		~Channel(void) = default;
+		Channel(Channel&& other) noexcept = default;
 
 		Channel&	operator=(const Channel&) = delete;
-		bool		operator<(const Channel& other) const;
 
-		typedef std::set<Client*>::iterator	iterator;
+		typedef std::unordered_set<Client*>::iterator	iterator;
 
 		void	addMember(Client& client);
 		void	addMember(Client& client, std::string_view& key);
@@ -57,6 +58,8 @@ class Channel {
 		void	publicMessage(const std::string& msg) const;
 
 		bool	isFull(void) const;
+		bool	isMember(Client& client) const;
+		bool	isOperator(Client& client) const;
 
 		//Getters
 		const std::string&	getName(void) const { return (this->_name); };
@@ -65,19 +68,19 @@ class Channel {
 
 		bool	isTopicProtected(void) const { return (this->_protectedTopic); };
 
-		const std::set<Client*>&	getOperators(void) const { return (this->_operators); };
-		const std::set<Client*>&	getMembers(void) const { return (this->_members); };
+		const std::unordered_set<Client*>&	getOperators(void) const { return (this->_operators); };
+		const std::unordered_set<Client*>&	getMembers(void) const { return (this->_members); };
 
 		void	setName(std::string_view name);
 		void	setTopic(std::string_view topic, Client& client);
 		void	setUserLimit(std::size_t members);
 
 		//Commands
-		static bool				isChannelCommand(std::set<Channel>& channels,
+		static bool				isChannelCommand(std::unordered_map<std::string, Channel>& channels,
 			Client& client, const std::string& command,
 			const std::vector<std::string_view>& params);
 		static AChannelCommand*	makeCommand(const std::string& command, Client& client,
-			std::set<Channel>& channels);
+			std::unordered_map<std::string, Channel>& channels);
 		static int				makeCommandNumber(const std::string& command);
 
 		//Exception messages

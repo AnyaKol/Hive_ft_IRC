@@ -15,7 +15,6 @@
 #include <memory>
 #include <unordered_map> // pair key value dicionary (e.g socket/ client)
 #include <vector>
-#include <set>
 
 #define MAXLINE 1024
 
@@ -30,7 +29,7 @@ class Server {
 		static bool		_signal;
 
 		std::unordered_map<int, Client>						_clients;
-		std::set<Channel>	_channels;
+		std::unordered_map<std::string, Channel>			_channels;
 		std::vector<struct pollfd>							_pollfds;
 
 	public:
@@ -48,9 +47,7 @@ class Server {
 		std::uint16_t					getPort() const { return (this->_port); };
 		const std::string&				getPassword() const { return (this->_password); };
 		const std::string&				getHostname() const { return (this->_hostname); };
-		std::set<Channel>&	getChannels() const {
-			return ( const_cast< std::set<Channel>& >(this->_channels) );
-		};
+		std::unordered_map<std::string, Channel>&	getChannels() { return (this->_channels); };
 
 
 		void	acceptClient();
