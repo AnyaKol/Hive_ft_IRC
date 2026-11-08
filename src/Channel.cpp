@@ -134,11 +134,15 @@ void	Channel::addOperator(Client& client) {
 }
 
 void	Channel::removeMember(Client& client) {
-	this->_members.erase( this->_members.find(&client) );
+	auto it = this->_members.find(&client);
+	if (it != this->_members.end())
+		this->_members.erase(it);
 }
 
 void	Channel::removeOperator(Client& client) {
-	this->_operators.erase( this->_operators.find(&client) );
+	auto it = this->_operators.find(&client);
+	if (it != this->_operators.end())
+		this->_operators.erase(it);
 }
 
 void	Channel::memberToOperator(Client& client) {
