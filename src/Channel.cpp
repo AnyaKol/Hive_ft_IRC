@@ -7,14 +7,6 @@
 //For unique pointer
 #include <memory>
 
-namespace mode {
-	enum allModes {
-		INVITE_ONLY = static_cast<int>('i'),
-		PROTECTED_TOPIC = static_cast<int>('t'),
-		HAS_KEY = static_cast<int>('k'),
-		HAS_USER_LIMIT = static_cast<int>('l')
-	};
-}
 
 // Set user limit to 0 instead of NAN because NAN is float
 Channel::Channel(std::string_view name, Client& creator) {
@@ -36,6 +28,11 @@ void	Channel::setName(std::string_view name) {
 		this->_name = name;
 }
 
+void	Channel::setKey(std::string key) {
+	this->_key = std::move(key);
+	this->_hasKey = true;
+}
+
 void	Channel::setTopic(std::string_view topic, Client& client) {
 	if (this->_protectedTopic) {
 		if ( !this->_operators.contains(&client) ) {
@@ -47,16 +44,33 @@ void	Channel::setTopic(std::string_view topic, Client& client) {
 }
 
 void	Channel::setUserLimit(std::size_t limit) {
-	if (!this->_hasUserLimit) {
-		//print error
-		return;
-	}
 	if (this->_members.size() + this->_operators.size() > limit) {
-		//print error
+		//print error Limit below current user count
 		return;
 	}
-	else
-		this->_userLimit = limit;
+	this->_userLimit = limit;
+	this->_hasUserLimit = true;
+}
+
+/* Flag setters used by MODE */
+void	Channel::setInviteOnly(bool value) {
+	this->_inviteOnly = value;
+}
+
+void	Channel::setTopicProtected(bool value) {
+	this->_protectedTopic = value;
+}
+
+/* Clears the channel key */
+void	Channel::clearKey(void) {
+	this->_key.clear();
+	this->_hasKey = false;
+}
+
+/* Clears the user limit */
+void	Channel::clearUserLimit(void) {
+	this->_userLimit = 0;
+	this->_hasUserLimit = false;
 }
 
 void	Channel::addMember(Client& client) {
@@ -75,11 +89,11 @@ void	Channel::addMember(Client& client) {
 		return;
 	}
 	if (this->_inviteOnly) {
-		if ( !this->_pendingInvites.contains(client.getUsername()) ) {
+		if ( !this->_pendingInvites.contains(client.getNickname()) ) {
 			//print error User not invited
 			return;
 		}
-		this->_pendingInvites.erase(this->_pendingInvites.find(client.getUsername()));//Remove from invites
+		this->_pendingInvites.erase(this->_pendingInvites.find(client.getNickname()));//Remove from invites
 	}
 
 	result = this->_members.insert(&client);
@@ -105,11 +119,11 @@ void	Channel::addMember(Client& client, std::string_view& key) {
 		return;
 	}
 	if (this->_inviteOnly) {
-		if ( !this->_pendingInvites.contains(client.getUsername()) ) {
+		if ( !this->_pendingInvites.contains(client.getNickname()) ) {
 			//print error User not invited
 			return;
 		}
-		this->_pendingInvites.erase(this->_pendingInvites.find(client.getUsername()));//Remove from invites
+		this->_pendingInvites.erase(this->_pendingInvites.find(client.getNickname()));//Remove from invites
 	}
 
 	result = this->_members.insert(&client);
@@ -172,38 +186,11 @@ bool	Channel::isOperator(Client& client) const {
 	return (this->_operators.contains(&client));
 }
 
-/* Channel modes:
- *  i - _inviteOnly
- *  t - _protectedTopic
- *  k - _hasKey
- *  o - memberToOperator / operatorToMember in MODE
- *  l - _hasUserLimit
- */
-void	Channel::changeMode(char mode, bool value) {
-	switch (static_cast<int>(mode)) {
-		case mode::INVITE_ONLY:
-			this->_inviteOnly = value;
-			break;
-		case mode::PROTECTED_TOPIC:
-			this->_protectedTopic = value;
-			break;
-		case mode::HAS_KEY:
-			this->_hasKey = value;
-			break;
-		case mode::HAS_USER_LIMIT:
-			this->_hasUserLimit = value;
-			break;
-		default:
-			// print error
-			break;
-	}
-}
-
 bool	Channel::isFull(void) const {
 	if (!this->_hasUserLimit)
 		return (false);
 
-	if (this->_members.size() + this->_operators.size() == this->_userLimit)
+	if (this->_members.size() + this->_operators.size() >= this->_userLimit)
 		return (true);
 	return (false);
 }

@@ -23,7 +23,7 @@ class Channel {
 	private:
 		std::string			_name;
 		std::string			_topic;
-		std::string_view	_key;
+		std::string			_key;
 		std::size_t			_userLimit;
 
 		std::unordered_set<Client*>		_operators {};
@@ -53,7 +53,6 @@ class Channel {
 		void	removeOperator(Client& client);
 		void	memberToOperator(Client& client);
 		void	operatorToMember(Client& client);
-		void	changeMode(char mode, bool value);
 
 		void	publicMessage(const std::string& msg) const;
 
@@ -67,14 +66,23 @@ class Channel {
 		const std::string&	getTopic(void) const { return (this->_topic); };
 		const std::size_t&	getUserLimit(void) const { return (this->_userLimit); };
 
+		bool	isInviteOnly(void) const { return (this->_inviteOnly); };
 		bool	isTopicProtected(void) const { return (this->_protectedTopic); };
+		bool	hasKey(void) const { return (this->_hasKey); };
+		bool	hasUserLimit(void) const { return (this->_hasUserLimit); };
+		const std::string&	getKey(void) const { return (this->_key); };
 
 		const std::unordered_set<Client*>&	getOperators(void) const { return (this->_operators); };
 		const std::unordered_set<Client*>&	getMembers(void) const { return (this->_members); };
 
 		void	setName(std::string_view name);
+		void	setKey(std::string key);
+		void	clearKey(void);
+		void	setInviteOnly(bool value);
+		void	setTopicProtected(bool value);
 		void	setTopic(std::string_view topic, Client& client);
 		void	setUserLimit(std::size_t members);
+		void	clearUserLimit(void);
 
 		//Commands
 		static bool				isChannelCommand(std::unordered_map<std::string, Channel>& channels,
