@@ -145,6 +145,14 @@ void	Channel::removeOperator(Client& client) {
 		this->_operators.erase(it);
 }
 
+/* Adds nickname to pending invites unless already invited */
+bool	Channel::invite(const std::string& nickname) {
+	if (this->_pendingInvites.contains(nickname))
+		return (false);
+	this->_pendingInvites.insert(nickname);
+	return (true);
+}
+
 void	Channel::memberToOperator(Client& client) {
 	this->removeMember(client);
 	this->addOperator(client);

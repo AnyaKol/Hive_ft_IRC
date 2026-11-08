@@ -60,6 +60,7 @@ class Channel {
 		bool	isFull(void) const;
 		bool	isMember(Client& client) const;
 		bool	isOperator(Client& client) const;
+		bool	invite(const std::string& nickname);
 
 		//Getters
 		const std::string&	getName(void) const { return (this->_name); };
