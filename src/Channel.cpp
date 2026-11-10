@@ -7,14 +7,6 @@
 //For unique pointer
 #include <memory>
 
-namespace mode {
-	enum allModes {
-		INVITE_ONLY = static_cast<int>('i'),
-		PROTECTED_TOPIC = static_cast<int>('t'),
-		HAS_KEY = static_cast<int>('k'),
-		HAS_USER_LIMIT = static_cast<int>('l')
-	};
-}
 
 // Set user limit to 0 instead of NAN because NAN is float
 Channel::Channel(std::string_view name, Client& creator) {
@@ -25,157 +17,179 @@ Channel::Channel(std::string_view name, Client& creator) {
 	this->addOperator(creator);
 }
 
+
 //Setters
 void	Channel::setName(std::string_view name) {
-	if (name.empty()) {
-		//print error
+	// Invalid name: keep the current one.
+	if (!isValidChannelName(name)) {
 		return;
 	}
-	else
-		this->_name = name;
+	this->_name = name;
+}
+
+void	Channel::setKey(std::string key, Client& client) {
+	if (key.empty() || key[0] == '#' || key[0] == '&' || key[0] == 'x') {
+		Channel::sendNumeric(client, IRC::ERR_INVALIDKEY, this->_name);
+		return;
+	}
+
+	this->_key = std::move(key);
+	this->_hasKey = true;
 }
 
 void	Channel::setTopic(std::string_view topic, Client& client) {
-	if (this->_protectedTopic) {
-		if ( !this->_operators.contains(&client) ) {
-			//print error
-			return;
-		}
+	if (this->_protectedTopic && !this->_operators.contains(&client)) {
+		return;
 	}
 	this->_topic = topic;
 }
 
 void	Channel::setUserLimit(std::size_t limit) {
-	if (!this->_hasUserLimit) {
-		//print error
+	if (limit == 0 || this->_members.size() + this->_operators.size() > limit) {
 		return;
 	}
-	if (this->_members.size() + this->_operators.size() > limit) {
-		//print error
-		return;
-	}
-	else
-		this->_userLimit = limit;
+	this->_userLimit = limit;
+	this->_hasUserLimit = true;
 }
 
-void	Channel::addMember(Client& client) {
-	std::pair<iterator, bool>	result;
+/* Flag setters used by MODE */
+void	Channel::setInviteOnly(bool value) {
+	this->_inviteOnly = value;
+}
 
-	if (this->_hasKey) {
-		//print error Need key
-		return;
-	}
-	if (this->isFull()) {
-		//print error
+void	Channel::setTopicProtected(bool value) {
+	this->_protectedTopic = value;
+}
+
+void	Channel::clearKey(void) {
+	this->_key.clear();
+	this->_hasKey = false;
+}
+
+void	Channel::clearUserLimit(void) {
+	this->_userLimit = 0;
+	this->_hasUserLimit = false;
+}
+
+void	Channel::addMember(Client& client, std::string_view key) {
+	if (this->isMember(client) || this->isOperator(client)) {
+		// JOIN on a channel already joined: no need for a reply
 		return;
 	}
 	if (this->_inviteOnly) {
-		if ( !this->_pendingInvites.contains(client.getUsername()) ) {
-			//print error User not invited
+		if ( !this->_pendingInvites.contains(client.getNickname()) ) {
+			Channel::sendNumeric(client, IRC::ERR_INVITEONLYCHAN, this->_name, "Cannot join channel (+i)");
 			return;
 		}
-		this->_pendingInvites.erase(this->_pendingInvites.find(client.getUsername()));//Remove from invites
 	}
-
-	result = this->_members.insert(&client);
-	if (!result.second) {
-		//print error Client already joined
-		return;
-	}
-}
-
-void	Channel::addMember(Client& client, std::string_view& key) {
-	std::pair<iterator, bool>	result;
-
-	if (this->_key != key)  {
-		//print error Keys do not mach
+	if (this->_hasKey && this->_key != key) {
+		// No key supplied or wrong key
+		Channel::sendNumeric(client, IRC::ERR_BADCHANNELKEY, this->_name, "Cannot join channel (+k)");
 		return;
 	}
 	if (this->isFull()) {
-		//print error
+		Channel::sendNumeric(client, IRC::ERR_CHANNELISFULL, this->_name, "Cannot join channel (+l)");
 		return;
-	}
-	if (this->_inviteOnly) {
-		if ( !this->_pendingInvites.contains(client.getUsername()) ) {
-			//print error User not invited
-			return;
-		}
-		this->_pendingInvites.erase(this->_pendingInvites.find(client.getUsername()));//Remove from invites
 	}
 
-	result = this->_members.insert(&client);
-	if (!result.second) {
-		//print error Client already joined
-		return;
-	}
+	// Add member
+	this->_members.insert(&client);
+
+	if (this->_inviteOnly)
+		this->_pendingInvites.erase(this->_pendingInvites.find(client.getNickname()));//Remove from invites
 }
 
 void	Channel::addOperator(Client& client) {
-	std::pair<iterator, bool>	result;
-
-	if (this->isFull()) {
-		//print error
+	// The creator path bypasses this because a fresh channel is never full.
+	if (this->isFull())
 		return;
-	}
-	result = this->_operators.insert(&client);
-	if (!result.second) {
-		//print error Client already joined
-		return;
-	}
+	this->_operators.insert(&client);
 }
 
 void	Channel::removeMember(Client& client) {
-	this->_members.erase( this->_members.find(&client) );
+	auto it = this->_members.find(&client);
+	if (it != this->_members.end())
+		this->_members.erase(it);
 }
 
 void	Channel::removeOperator(Client& client) {
-	this->_operators.erase( this->_operators.find(&client) );
+	auto it = this->_operators.find(&client);
+	if (it != this->_operators.end())
+		this->_operators.erase(it);
+}
+
+/* Removes the client from members and operators and broadcasts a QUIT-style
+ * message. Returns true if the client was on this channel. */
+bool	Channel::removeClientEverywhere(Client& client, const std::string& reason) {
+	bool	wasHere = this->isMember(client) || this->isOperator(client);
+
+	if (!wasHere)
+		return (false);
+
+	// Create custom user message
+	std::string	quitMsg = ":" + client.getNickname() + "!" + client.getUsername() +
+		"@" + client.getHostname() + " QUIT :Quit: " + reason + "\r\n";
+	// Sender doesn't get the message
+	this->publicMessage(quitMsg, &client);
+
+	this->removeMember(client);
+	this->removeOperator(client);
+	return (true);
+}
+
+// Adds nickname to pending invites unless already invited
+bool	Channel::invite(const std::string& nickname) {
+	if (this->_pendingInvites.contains(nickname))
+		return (false);
+	this->_pendingInvites.insert(nickname);
+	return (true);
 }
 
 void	Channel::memberToOperator(Client& client) {
+	if (this->isOperator(client))
+		return;
 	this->removeMember(client);
-	this->addOperator(client);
+	this->_operators.insert(&client);
 }
 
 void	Channel::operatorToMember(Client& client) {
+	if (this->isMember(client))
+		return;
 	this->removeOperator(client);
-	this->addMember(client);
+	this->_members.insert(&client);
 }
 
-/* Channel modes:
- *  i - _inviteOnly
- *  t - _protectedTopic
- *  k - _hasKey
- *  o - memberToOperator / operatorToMember in MODE
- *  l - _hasUserLimit
- */
-void	Channel::changeMode(char mode, bool value) {
-	switch (static_cast<int>(mode)) {
-		case mode::INVITE_ONLY:
-			this->_inviteOnly = value;
-			break;
-		case mode::PROTECTED_TOPIC:
-			this->_protectedTopic = value;
-			break;
-		case mode::HAS_KEY:
-			this->_hasKey = value;
-			break;
-		case mode::HAS_USER_LIMIT:
-			this->_hasUserLimit = value;
-			break;
-		default:
-			// print error
-			break;
-	}
+bool	Channel::isMember(Client& client) const {
+	return (this->_members.contains(&client));
+}
+
+bool	Channel::isOperator(Client& client) const {
+	return (this->_operators.contains(&client));
 }
 
 bool	Channel::isFull(void) const {
 	if (!this->_hasUserLimit)
 		return (false);
 
-	if (this->_members.size() + this->_operators.size() == this->_userLimit)
+	if (this->_members.size() + this->_operators.size() >= this->_userLimit)
 		return (true);
 	return (false);
+}
+
+Client*	Channel::getClientByNick(const std::string_view& nickname) const {
+	// Check members 
+	for (Client* client : this->_members) {
+		if (client->getNickname() == nickname) {
+			return (client);
+		}
+	}
+	// Check operators
+	for (Client* client : this->_operators) {
+		if (client->getNickname() == nickname) {
+			return (client);
+		}
+	}
+	return nullptr;
 }
 
 /* Channel name may not contain any spaces (' ', 0x20), a control G / BELL
@@ -186,7 +200,7 @@ bool	Channel::isFull(void) const {
  * 	('&', 0x26) - local channels; the clients connected can only see and talk
  * 	to other clients on the same server
  */
-bool	isValidChannelName(std::string_view name) {
+bool	Channel::isValidChannelName(std::string_view name) {
 	if (name.size() < 2 || name.size() > IRC::CHANNELLEN)
 		return false;
 	if (name[0] != '#' && name[0] != '&')
@@ -198,34 +212,88 @@ bool	isValidChannelName(std::string_view name) {
 	return true;
 }
 
-void	Channel::publicMessage(const std::string& msg) const {
+void	Channel::publicMessage(const std::string& msg, const Client* sender) const {
 	if (msg.size() == 0)
 		return;
 
-	std::for_each(this->_operators.begin(), this->_operators.end(), [&](Client* client) {
-		(*client).appendToWriteBuffer(msg);
-	});
-	std::for_each(this->_members.begin(), this->_members.end(), [&](Client* client) {
-		(*client).appendToWriteBuffer(msg);
-	});
+	// Send to every operator and member except the sender
+	for (Client* client : this->_operators) {
+		if (client != sender)
+			client->appendToWriteBuffer(msg);
+	}
+	for (Client* client : this->_members) {
+		if (client != sender)
+			client->appendToWriteBuffer(msg);
+	}
+}
+
+/* Routes a numeric to its IRC::Reply builder and queues the formatted reply.
+ * params:   middle parameters (space-separated), without the nick
+ * trailing: text sent after ':' (may contain spaces) */
+void	Channel::sendNumeric(Client& client, IRC::NumericCodes code,
+	const std::string& params, const std::string& trailing)
+{
+	const std::string&	nick = client.getNickname();
+	std::string	msg;
+
+	switch (code) {
+		case IRC::RPL_CHANNELMODEIS:	msg = IRC::Reply::channelModeIs(nick, params, trailing); break;
+		case IRC::RPL_CREATIONTIME:		msg = IRC::Reply::creationTime(nick, params, trailing); break;
+		case IRC::RPL_NOTOPIC:			msg = IRC::Reply::noTopic(nick, params); break;
+		case IRC::RPL_TOPIC:			msg = IRC::Reply::topic(nick, params, trailing); break;
+		case IRC::RPL_TOPICWHOTIME:		msg = IRC::Reply::topicWhoTime(nick, params, params, trailing); break;
+		case IRC::RPL_INVITING:			msg = IRC::Reply::inviting(nick, params, trailing); break;
+		case IRC::RPL_NAMREPLY:			msg = IRC::Reply::namReply(nick, params, trailing); break;
+		case IRC::RPL_ENDOFNAMES:		msg = IRC::Reply::endOfNames(nick, params); break;
+		case IRC::ERR_NOSUCHNICK:		msg = IRC::Reply::errNoSuchNick(nick, params); break;
+		case IRC::ERR_NOSUCHCHANNEL:	msg = IRC::Reply::errNoSuchChannel(nick, params); break;
+		case IRC::ERR_CANNOTSENDTOCHAN:	msg = IRC::Reply::errCannotSendToChannel(nick, params); break;
+		case IRC::ERR_NOORIGIN:			msg = IRC::Reply::errNoOrigin(nick); break;
+		case IRC::ERR_NORECIPIENT:		msg = IRC::Reply::errNoRecipient(nick, params); break;
+		case IRC::ERR_NOTEXTTOSEND:		msg = IRC::Reply::errNoTextToSend(nick); break;
+		case IRC::ERR_UNKNOWNCOMMAND:	msg = IRC::Reply::errUnknownCommand(nick, params); break;
+		case IRC::ERR_NONICKNAMEGIVEN:	msg = IRC::Reply::errNoNickGiven(nick); break;
+		case IRC::ERR_ERRONEUSNICKNAME:	msg = IRC::Reply::errErroneousNick(nick, params); break;
+		case IRC::ERR_NICKNAMEINUSE:	msg = IRC::Reply::errNickInUse(nick, params); break;
+		case IRC::ERR_USERNOTINCHANNEL:	msg = IRC::Reply::errUserNotInChannel(nick, params, trailing); break;
+		case IRC::ERR_NOTONCHANNEL:		msg = IRC::Reply::errNotOnChannel(nick, params); break;
+		case IRC::ERR_USERONCHANNEL:	msg = IRC::Reply::errUserAlreadyInChannel(nick, params, trailing); break;
+		case IRC::ERR_NOTREGISTERED:	msg = IRC::Reply::errNotRegistered(nick); break;
+		case IRC::ERR_NEEDMOREPARAMS:	msg = IRC::Reply::errNeedMoreParams(nick, params); break;
+		case IRC::ERR_ALREADYREGISTERED:	msg = IRC::Reply::errAlreadyRegistered(nick); break;
+		case IRC::ERR_PASSWDMISMATCH:	msg = IRC::Reply::errPasswordMismatch(nick); break;
+		case IRC::ERR_CHANNELISFULL:	msg = IRC::Reply::errChannelIsFull(nick, params); break;
+		case IRC::ERR_UNKNOWNMODE:		msg = IRC::Reply::errUnknownMode(nick, trailing.empty() ? '?' : trailing[0]); break;
+		case IRC::ERR_INVITEONLYCHAN:	msg = IRC::Reply::errInviteOnlyChannel(nick, params); break;
+		case IRC::ERR_BADCHANNELKEY:	msg = IRC::Reply::errBadChannelKey(nick, params); break;
+		case IRC::ERR_BADCHANMASK:		msg = IRC::Reply::errBadChannelMask(nick, params); break;
+		case IRC::ERR_CHANOPRIVSNEEDED:	msg = IRC::Reply::errChannelOpRequired(nick, params); break;
+		case IRC::ERR_INVALIDKEY:		msg = IRC::Reply::errInvalidKey(nick, params); break;
+		case IRC::ERR_INVALIDMODEPARAM:	msg = IRC::Reply::errInvalidModeParam(nick, params, '?', "", trailing); break;
+		default:						return; // unknown numeric: send nothing
+	}
+	client.appendToWriteBuffer(msg);
 }
 
 // Commands
-bool	Channel::isChannelCommand(std::unordered_set<Channel*>& channels,
+bool	Channel::isChannelCommand(Server& server,
+			std::unordered_map<std::string, Channel>& channels,
 			Client& client, const std::string& command,
 			const std::vector<std::string_view>& params) {
 
 	try {
-		std::unique_ptr<AChannelCommand> cmd( makeCommand(command, client, channels) );
+		std::unique_ptr<AChannelCommand> cmd( makeCommand(server, command, client, channels) );
 		cmd->execute(params);
-	} catch (std::exception &e) {//Need to specify exceptions of class Channel
+	} catch (Channel::Exception &e) { // Expected command failures (bad params, not a channel command)
+		return (false);
+	} catch (Channel::NameException &e) { // Channel lookup/creation failures
 		return (false);
 	}
 	return (true);
 }
 
-AChannelCommand*	Channel::makeCommand(const std::string& command, Client& client,
-	std::unordered_set<Channel*>& channels) {
+AChannelCommand*	Channel::makeCommand(Server& server, const std::string& command, Client& client,
+	std::unordered_map<std::string, Channel>& channels) {
 
 	enum		allCommands {
 		INVITE,
@@ -240,25 +308,24 @@ AChannelCommand*	Channel::makeCommand(const std::string& command, Client& client
 
 	switch (commandNumber) {
 		case allCommands::INVITE:
-			return (new Invite(client, channels));
+			return (new Invite(client, channels, server));
 		case allCommands::JOIN:
-			return (new Join(client, channels));
+			return (new Join(client, channels, server));
 		case allCommands::KICK:
-			return (new Kick(client, channels));
+			return (new Kick(client, channels, server));
 		case allCommands::MODE:
-			return (new Mode(client, channels));
+			return (new Mode(client, channels, server));
 		case allCommands::NAMES:
-			return (new Names(client, channels));
+			return (new Names(client, channels, server));
 		case allCommands::PART:
-			return (new Part(client, channels));
+			return (new Part(client, channels, server));
 		case allCommands::TOPIC:
-			return (new Topic(client, channels));
+			return (new Topic(client, channels, server));
 		default:
 			throw (Exception(ERR_NOT_CHANNEL_COMMAND));
 	}
 }
 
-//TODO: Optimize for loop
 int	Channel::makeCommandNumber(const std::string& command) {
 	const std::vector<std::string>	commandStrings = {
 		"INVITE",
@@ -269,21 +336,13 @@ int	Channel::makeCommandNumber(const std::string& command) {
 		"PART",
 		"TOPIC"
 	};
-	int num = 0;
-
-	for (std::string str : commandStrings) {
-		if (str == command)
-			break;
-		num++;
-	}
-	for (num = 0; num < static_cast<int>(commandStrings.size()); num++) {
+	for (int num = 0; num < static_cast<int>(commandStrings.size()); num++) {
 		if (command == commandStrings[num])
-			break ;
+			return (num);
 	}
-	return (num);
+	return (-1); // not a channel command
 }
 
-//TODO: Move exceptions to different file
 //Exceptions
 Channel::Exception::Exception(const std::string& message) {
 	this->_msg = message;
@@ -311,4 +370,4 @@ const std::string	Channel::ERR_NOT_CHANNEL_COMMAND = "Not a channel command.";
 const std::string	Channel::ERR_WRONG_NUM_PARAM = "Wrong number of parameters for command.";
 
 // NameException messages, no '.' at the end
-const std::string	Channel::ERR_CHANNEL_NOT_FOUND = "No channel with name";
+const std::string	Channel::ERR_CREATE_CHANNEL = "Could not create a channel wth name ";

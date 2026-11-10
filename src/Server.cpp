@@ -22,7 +22,8 @@ void	Server::signalHandler(int sig) {
 	Server::_signal = true;
 }
 
-Server::Server(std::uint16_t port, const std::string& password) : _port{port}, _password{password}, _serverSocket{-1} { }
+Server::Server(std::uint16_t port, const std::string& password)
+: _port{port}, _password{password}, _serverSocket{-1} {}
 
 bool	Server::initServer() {
 
@@ -226,6 +227,21 @@ void Server::clearClient(int fd) {
 			break;
 		}
 	}
+
+	// Remove the client from every channel it is on, before erasing the object
+	Client&	leaving = _clients[fd];
+	for (auto chIt = _channels.begin(); chIt != _channels.end(); ) {
+		if (chIt->second.removeClientEverywhere(leaving, "Disconnected")) {
+			// Destroy channels left completely empty
+			if (chIt->second.getMembers().empty() && chIt->second.getOperators().empty())
+				chIt = _channels.erase(chIt);
+			else
+				++chIt;
+		} else {
+			++chIt;
+		}
+	}
+
 
 	_clients.erase(fd);
 

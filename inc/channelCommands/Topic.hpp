@@ -10,7 +10,7 @@ class Topic : public virtual AChannelCommand {
 		Topic(void) = delete;
 
 	public:
-		Topic(Client& client, std::unordered_set<Channel*>& channels);
+		Topic(Client& client, std::unordered_map<std::string, Channel>& channels, Server& server);
 		Topic(const Topic&) = delete;
 		~Topic(void) {};
 

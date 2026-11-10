@@ -1,13 +1,9 @@
 #include "Join.hpp"
 #include "Channel.hpp"
 
-Join::Join(Client& client, std::unordered_set<Channel*>& channels)
-: AChannelCommand(client, channels) {}
+Join::Join(Client& client, std::unordered_map<std::string, Channel>& channels, Server& server)
+: AChannelCommand(client, channels, server) {}
 
-/* Command: JOIN
- * Parameters: <channel>{,<channel>} [<key>{,<key>}]
- * Alt Params: 0
- */
  // Servers may validate the <key> value, eg. to forbid spaces; can forbid a <key> to start from channel name prefix ('#' or '&')
 /*
 	JOIN #channel1,#channel2,#channel3 key2,key3
@@ -17,43 +13,73 @@ Join::Join(Client& client, std::unordered_set<Channel*>& channels)
 void	Join::execute(const std::vector<std::string_view>& params) {
 
 	//Check if no parameters given
-	if (params.size() != 1 || params.size() != 2)
+	if (params.size() != 1 && params.size() != 2)
 		throw (Channel::Exception(Channel::ERR_WRONG_NUM_PARAM));
 
-	//Print all params
-	// int i = 0;
-	// for (std::string_view param : params) {
-	// 	std::cout << "Param " << i << ": " << param << std::endl;
-	// 	i++;
-	// }
-
+	// JOIN <channel>{,<channel>} [<key>{,<key>}]
 	// Split <channels> and <keys>
 	this->channels = AChannelCommand::splitByCommas(params[0]);
 	if (params.size() == 2)
 		this->keys = AChannelCommand::splitByCommas(params[1]);
 
 	// Go through <channels> and add executing client; if <key> = "x" then skip it
-	try {
-		if (this->keys.size() > 0) {
-			for (std::string_view channelName : this->channels) {
-				Channel* channel = AChannelCommand::findChannel(this->AChannelCommand::allChannels, channelName);
-				std::vector<std::string_view>::iterator nextKey = this->keys.begin();
 
-				if (*nextKey != "x")
-					channel->addMember(this->AChannelCommand::executor, *nextKey);
+	try {
+		std::vector<std::string_view>::iterator nextKey = this->keys.begin();
+
+		for (std::string_view channelName : this->channels) {
+			// Reject empty/invalid channel names (irssi sends "JOIN :" with empty trailing on connect)
+			if (!Channel::isValidChannelName(channelName))
+				continue;
+
+			bool	channelFound = false;
+			Channel& channel = findChannel(channelName, channelFound);
+
+			// Creator of a new channel is already operator; just confirm the JOIN to them
+			if (channelFound) {
+				if (nextKey < this->keys.end() && *nextKey != "x")
+					channel.addMember(this->AChannelCommand::executor, *nextKey);
 				else
-					channel->addMember(this->AChannelCommand::executor);
-				if (nextKey < this->keys.end())
-					nextKey++;
-			}
-		} else {
-			for (std::string_view channelName : this->channels) {
-				Channel* channel = AChannelCommand::findChannel(this->AChannelCommand::allChannels, channelName);
+					channel.addMember(this->AChannelCommand::executor);
 				
-				channel->addMember(this->AChannelCommand::executor);
+				// Failed to add client for some reason; continue without join message
+				if (!channel.isMember(this->AChannelCommand::executor) && !channel.isOperator(this->AChannelCommand::executor))
+					continue;
 			}
+
+			this->sendJoinMessage(channel);
+
+			if (nextKey < this->keys.end())
+				nextKey++;
+
+			std::cout << "Joining: " << channelName << std::endl;
 		}
-	} catch (std::exception &e) {//Need to specify exceptions of class Channel
-		this->AChannelCommand::executor.appendToWriteBuffer(e.what());//Send error message to executor client
+	} catch (Channel::Exception &e) { // Expected command failures
+		return;
+	} catch (Channel::NameException &e) {
+		return;
 	}
+}
+
+void	Join::sendJoinMessage(Channel& channel) const {
+	// Create custom user message
+	std::string	joinMsg = ":" + this->AChannelCommand::executor.getNickname() + "!" +
+		this->AChannelCommand::executor.getUsername() + "@" +
+		this->AChannelCommand::executor.getHostname() + " JOIN " +
+		std::string(channel.getName()) + "\r\n";
+	// Sender also gets the message
+	channel.publicMessage(joinMsg);
+
+	// Standard JOIN reply: tell the joiner who is on the channel
+	std::vector<std::string>	opNicks, memNicks;
+
+	for (const Client* op : channel.getOperators())
+		opNicks.push_back(op->getNickname());
+	for (const Client* member : channel.getMembers())
+		memNicks.push_back(member->getNickname());
+
+	Channel::sendNumeric(this->AChannelCommand::executor, IRC::RPL_NAMREPLY,
+		std::string(channel.getName()), IRC::Reply::namesList(opNicks, memNicks));
+	Channel::sendNumeric(this->AChannelCommand::executor, IRC::RPL_ENDOFNAMES,
+		std::string(channel.getName()), "End of /NAMES list");
 }

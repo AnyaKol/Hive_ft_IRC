@@ -15,7 +15,6 @@
 #include <memory>
 #include <unordered_map> // pair key value dicionary (e.g socket/ client)
 #include <vector>
-#include <unordered_set>
 
 #define MAXLINE 1024
 
@@ -27,15 +26,15 @@ class Server {
 		int				_serverSocket{};
 		std::string		_hostname;
 		std::ofstream	_serverLog; // record server events
+		static bool		_signal;
 
-		static bool						_signal;
-		std::unordered_map<int, Client>	_clients;
-		std::unordered_set<Channel*>	_channels;
-		std::vector<struct pollfd>		_pollfds;
+		std::unordered_map<int, Client>						_clients;
+		std::unordered_map<std::string, Channel>			_channels;
+		std::vector<struct pollfd>							_pollfds;
 
 	public:
-		Server(std::uint16_t port, const std::string &password);
 		Server() = delete;
+		Server(std::uint16_t port, const std::string& password);
 		Server(const Server&) = delete;
 		~Server() = default;
 
@@ -45,11 +44,10 @@ class Server {
 		void		runServer();
 
 		//Getters
-		std::uint16_t					getPort() const { return _port; };
-		const std::string&				getPassword() const { return _password; };
-		const std::string&				getHostname() const { return _hostname; };
-		std::unordered_set<Channel*>&	getChannels() const { 
-			return const_cast<std::unordered_set<Channel*>&>(_channels); };
+		std::uint16_t					getPort() const { return (this->_port); };
+		const std::string&				getPassword() const { return (this->_password); };
+		const std::string&				getHostname() const { return (this->_hostname); };
+		std::unordered_map<std::string, Channel>&	getChannels() { return (this->_channels); };
 
 
 		void	acceptClient();

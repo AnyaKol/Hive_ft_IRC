@@ -1,8 +1,8 @@
 #include "Topic.hpp"
 #include "Channel.hpp"
 
-Topic::Topic(Client& client, std::unordered_set<Channel*>& channels)
-: AChannelCommand(client, channels) {}
+Topic::Topic(Client& client, std::unordered_map<std::string, Channel>& channels, Server& server)
+: AChannelCommand(client, channels, server) {}
 
 void	Topic::execute(const std::vector<std::string_view>& params) {
 
@@ -11,33 +11,30 @@ void	Topic::execute(const std::vector<std::string_view>& params) {
 
 	// Check for required parameters
 	if (params.empty()) {
-		mutableClient.appendToWriteBuffer("461 " + nick + " TOPIC :Not enough parameters\r\n");
+		Channel::sendNumeric(mutableClient, IRC::ERR_NEEDMOREPARAMS, "TOPIC", "Not enough parameters");
 		return;
 	}
 
 	std::string targetName(params[0]);
 	Channel* targetChannel = nullptr;
 
-	// Search for the target channel in the server's channels set
-	for (Channel* chan : this->AChannelCommand::allChannels) {
-		if (chan->getName() == targetName) {
-			targetChannel = chan;
-			break;
-		}
-	}
+	// Search for the target channel in the server's channels map
+	auto channelIt = this->AChannelCommand::allChannels.find(targetName);
+	if (channelIt != this->AChannelCommand::allChannels.end())
+		targetChannel = &channelIt->second;
 
 	// If channel does not exist, return error
 	if (!targetChannel) {
-		mutableClient.appendToWriteBuffer("403 " + nick + " " + targetName + " :No such channel\r\n");
+		Channel::sendNumeric(mutableClient, IRC::ERR_NOSUCHCHANNEL, targetName, "No such channel");
 		return;
 	}
 
 	// Verify if the client is a member or operator of the channel
-	bool isOp = targetChannel->getOperators().contains(&mutableClient);
-	bool isMem = targetChannel->getMembers().contains(&mutableClient);
+	bool isOp = targetChannel->isOperator(mutableClient);
+	bool isMem = targetChannel->isMember(mutableClient);
 
 	if (!isOp && !isMem) {
-		mutableClient.appendToWriteBuffer("442 " + nick + " " + targetName + " :You're not on that channel\r\n");
+		Channel::sendNumeric(mutableClient, IRC::ERR_NOTONCHANNEL, targetName, "You're not on that channel");
 		return;
 	}
 
@@ -45,16 +42,16 @@ void	Topic::execute(const std::vector<std::string_view>& params) {
 	if (params.size() == 1) {
 		std::string currentTopic(targetChannel->getTopic());
 		if (currentTopic.empty()) {
-			mutableClient.appendToWriteBuffer("331 " + nick + " " + targetName + " :No topic is set\r\n");
+			Channel::sendNumeric(mutableClient, IRC::RPL_NOTOPIC, targetName, "No topic is set");
 		} else {
-			mutableClient.appendToWriteBuffer("332 " + nick + " " + targetName + " :" + currentTopic + "\r\n");
+			Channel::sendNumeric(mutableClient, IRC::RPL_TOPIC, targetName, currentTopic);
 		}
 		return;
 	}
 
 	// If setting a topic, check if topic is protected and client is not an operator
 	if (targetChannel->isTopicProtected() && !isOp) {
-		mutableClient.appendToWriteBuffer("482 " + nick + " " + targetName + " :You're not channel operator\r\n");
+		Channel::sendNumeric(mutableClient, IRC::ERR_CHANOPRIVSNEEDED, targetName, "You're not channel operator");
 		return;
 	}
 

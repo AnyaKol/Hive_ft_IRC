@@ -18,7 +18,11 @@ void Commands::processCommand(Server& serv, Client& client, Parser& cmd) {
 	if (command == "PASS") { handlePass(serv, client, cmd); return; }
 	if (command == "NICK") { handleNick(serv, client, cmd); return; }
 	if (command == "USER") { handleUser(serv, client, cmd); return; }
-	if (command == "CAP") { return; }  /* whitelisting CAP so the client can be happy! */
+	if (command == "CAP") {
+		// Reply to CAP LS so clients like irssi finish negotiation and register immediately
+		client.appendToWriteBuffer("CAP * LS :\r\n");
+		return;
+	}
 
 
 	// If they are not registered, block all other commands
@@ -30,7 +34,7 @@ void Commands::processCommand(Server& serv, Client& client, Parser& cmd) {
 
 	// Channel Commands (Add later)
 	//Check if it's a channel command; if it is - execute and return
-	if (Channel::isChannelCommand(serv.getChannels(), client, command, cmd.getParams())) {
+	if (Channel::isChannelCommand(serv, serv.getChannels(), client, command, cmd.getParams())) {
 		return;
 	}
 

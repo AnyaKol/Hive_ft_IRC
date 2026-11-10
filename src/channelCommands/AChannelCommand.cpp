@@ -3,37 +3,41 @@
 
 #include <ranges>
 
-AChannelCommand::AChannelCommand(Client& client, std::unordered_set<Channel*>& channels)
-: executor{client}, allChannels{channels} {}
-
 /*
-Finds channel with given name. Throws exception if not found.
+Finds channel with given name or creates new channel if no channel was found.
+Throws exception if error occured (if channel with this name exists).
 
-@param	const std::set<Channel*>	channels	set of all channels on
-												server.
 @param	const std::string_view		channelName	name of channel to find.
 
-@returns	Channel*	returns pointer to object of class Channel; if no
-						channel was found - throws exception with
-						ERR_CHANNEL_NOT_FOUND message.
+@returns	Channel&	finds or creates an object of class Channel in the
+						server's unordered_map<std::string, Channel> and
+						returns a reference to it; if error occured - throws
+						exception with ERR_CREATE_CHANNEL message.
 */
-Channel*	AChannelCommand::findChannel(const std::unordered_set<Channel*>& channels,
-	const std::string_view& channelName) {
+Channel&	AChannelCommand::findChannel(const std::string_view& channelName, bool& channelFound) {
 
-	for (Channel* channel : channels) {
-		std::string_view name = channel->getName();
+	auto it = this->allChannels.find(std::string(channelName));
+	if (it != this->allChannels.end())
+	{
+		channelFound = true;
+		return (it->second);
+	}
 
-		if (name == channelName)
-			return (channel);
-	};
-	throw (Channel::NameException(Channel::ERR_CHANNEL_NOT_FOUND, channelName));
+	//If no channel found - create new channel;
+	auto inserted = this->allChannels.emplace(
+		std::string(channelName), Channel(channelName, this->executor)
+	);
+	if (!inserted.second)
+		throw (Channel::NameException(Channel::ERR_CREATE_CHANNEL, channelName));
+	channelFound = false;
+	return (inserted.first->second);
 }
 
-std::vector<std::string_view>	AChannelCommand::splitByCommas(
+std::vector<std::string_view>	AChannelCommand::splitByCommas( 
 	const std::string_view& paramWithCommas) {
 
 	std::vector<std::string_view>	paramVector {};
-	auto range = std::views::split(paramWithCommas, ",");
+	auto range = std::ranges::views::split(paramWithCommas, ",");
 
 	for (const auto& param : range) {
 		paramVector.push_back( std::string_view(param.begin(), param.end()) );
