@@ -10,7 +10,7 @@ class Mode : public virtual AChannelCommand {
 		Mode(void) = delete;
 
 	public:
-		Mode(Client& client, std::unordered_map<std::string, Channel>& channels);
+		Mode(Client& client, std::unordered_map<std::string, Channel>& channels, Server& server);
 		Mode(const Mode&) = delete;
 		~Mode(void) {};
 

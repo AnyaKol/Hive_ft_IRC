@@ -1,8 +1,8 @@
 #include "Part.hpp"
 #include "Channel.hpp"
 
-Part::Part(Client& client, std::unordered_map<std::string, Channel>& channels)
-: AChannelCommand(client, channels) {}
+Part::Part(Client& client, std::unordered_map<std::string, Channel>& channels, Server& server)
+: AChannelCommand(client, channels, server) {}
 
 void	Part::execute(const std::vector<std::string_view>& params) {
 
@@ -35,5 +35,9 @@ void	Part::execute(const std::vector<std::string_view>& params) {
 
 		channel.removeMember(who);
 		channel.removeOperator(who);
+
+		// Channel with nobody left is destroyed (state like topic/modes/key is lost)
+		if (channel.getMembers().empty() && channel.getOperators().empty())
+			this->AChannelCommand::allChannels.erase(it);
 	}
 }

@@ -1,8 +1,8 @@
 #include "Kick.hpp"
 #include "Channel.hpp"
 
-Kick::Kick(Client& client, std::unordered_map<std::string, Channel>& channels)
-: AChannelCommand(client, channels) {}
+Kick::Kick(Client& client, std::unordered_map<std::string, Channel>& channels, Server& server)
+: AChannelCommand(client, channels, server) {}
 
 void	Kick::execute(const std::vector<std::string_view>& params) {
 
@@ -17,14 +17,20 @@ void	Kick::execute(const std::vector<std::string_view>& params) {
 		reason = std::string(params[2]);
 
 	auto channelIt = this->AChannelCommand::allChannels.find(std::string(channelName));
-	if (channelIt == this->AChannelCommand::allChannels.end())
-		return; // no such channel
+	if (channelIt == this->AChannelCommand::allChannels.end()) {
+		Channel::sendNumeric(this->AChannelCommand::executor, IRC::ERR_NOSUCHCHANNEL,
+			std::string(channelName), "No such channel");
+		return;
+	}
 	Channel& channel = channelIt->second;
 
 	// Only operators may kick
 	Client&	who = this->AChannelCommand::executor;
-	if (!channel.isOperator(who))
+	if (!channel.isOperator(who)) {
+		Channel::sendNumeric(who, IRC::ERR_CHANOPRIVSNEEDED,
+			std::string(channelName), "You're not channel operator");
 		return;
+	}
 
 	// Kick each target: announce, then remove from members and operators
 	for (std::string_view nickname : nicknames) {
@@ -42,8 +48,12 @@ void	Kick::execute(const std::vector<std::string_view>& params) {
 			}
 		}
 
-		if (!target)
-			continue; // target not on channel
+		if (!target) {
+			// 441: target nick is not on this channel
+			Channel::sendNumeric(who, IRC::ERR_USERNOTINCHANNEL,
+				std::string(nickname), std::string(channelName));
+			continue;
+		}
 
 		std::string	kickMsg = ":" + who.getNickname() + "!" + who.getUsername() +
 			"@" + who.getHostname() + " KICK " + std::string(channelName) + " " +

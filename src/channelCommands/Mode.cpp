@@ -2,8 +2,8 @@
 #include "IRC.hpp"
 #include "Channel.hpp"
 
-Mode::Mode(Client& client, std::unordered_map<std::string, Channel>& channels)
-: AChannelCommand(client, channels) {}
+Mode::Mode(Client& client, std::unordered_map<std::string, Channel>& channels, Server& server)
+: AChannelCommand(client, channels, server) {}
 
 namespace mode {
 	enum allModes {
@@ -17,11 +17,13 @@ namespace mode {
 void	Mode::execute(const std::vector<std::string_view>& params) {
 
 	// MODE <channel> [<modestring> [<mode arguments>...]]
-	auto channelIt = this->AChannelCommand::allChannels.find(std::string(params[0]));
-	if (channelIt == this->AChannelCommand::allChannels.end())
-		return; // no such channel
-	Channel& channel = channelIt->second;
 	Client&	who = this->AChannelCommand::executor;
+	auto channelIt = this->AChannelCommand::allChannels.find(std::string(params[0]));
+	if (channelIt == this->AChannelCommand::allChannels.end()) {
+		Channel::sendNumeric(who, IRC::ERR_NOSUCHCHANNEL, std::string(params[0]), "No such channel");
+		return;
+	}
+	Channel& channel = channelIt->second;
 
 	// Only 1 argument: query - reply with current modes, key hidden
 	if (params.size() == 1) {
@@ -39,8 +41,11 @@ void	Mode::execute(const std::vector<std::string_view>& params) {
 	}
 
 	// Only operators may change modes
-	if (!channel.isOperator(who))
+	if (!channel.isOperator(who)) {
+		Channel::sendNumeric(who, IRC::ERR_CHANOPRIVSNEEDED,
+			std::string(params[0]), "You're not channel operator");
 		return;
+	}
 	// Apply mode chars left to right; sign toggles '+' or '-' until next sign
 
 	bool	adding = true;
@@ -69,7 +74,17 @@ void	Mode::execute(const std::vector<std::string_view>& params) {
 			case mode::HAS_USER_LIMIT:
 				if (adding) {
 					if (argIndex < params.size()) {
-						channel.setUserLimit(std::stoul(std::string(params[argIndex])));
+						// Accept only digits: rejects signs, spaces, and empty input
+						std::string_view	limitStr = params[argIndex];
+						bool	valid = !limitStr.empty()
+							&& limitStr.size() <= 19	// cannot overflow size_t (max 20 digits)
+							&& limitStr.find_first_not_of("0123456789") == std::string_view::npos;
+						if (!valid) {
+							who.appendToWriteBuffer(IRC::Reply::errInvalidModeParam(who.getNickname(),
+								std::string(params[0]), 'l', limitStr, "Invalid limit parameter"));
+						} else {
+							channel.setUserLimit(std::stoul(std::string(limitStr)));
+						}
 						argIndex++;
 					}
 				} else {
@@ -77,7 +92,11 @@ void	Mode::execute(const std::vector<std::string_view>& params) {
 				}
 				break;
 			default:
-				break; // unknown mode char
+				// 472 ERR_UNKNOWNMODE: char exists in the modestring but server
+				// does not implement it. '+'/'-' were consumed above.
+				Channel::sendNumeric(who, IRC::ERR_UNKNOWNMODE,
+					std::string(params[0]), std::string(1, modeChar));
+				break;
 		}
 	}
 }

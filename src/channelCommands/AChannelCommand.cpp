@@ -14,11 +14,14 @@ Throws exception if error occured (if channel with this name exists).
 						returns a reference to it; if error occured - throws
 						exception with ERR_CREATE_CHANNEL message.
 */
-Channel&	AChannelCommand::findChannel(const std::string_view& channelName) {
+Channel&	AChannelCommand::findChannel(const std::string_view& channelName, bool& channelFound) {
 
 	auto it = this->allChannels.find(std::string(channelName));
 	if (it != this->allChannels.end())
+	{
+		channelFound = true;
 		return (it->second);
+	}
 
 	//If no channel found - create new channel;
 	auto inserted = this->allChannels.emplace(
@@ -26,6 +29,7 @@ Channel&	AChannelCommand::findChannel(const std::string_view& channelName) {
 	);
 	if (!inserted.second)
 		throw (Channel::NameException(Channel::ERR_CREATE_CHANNEL, channelName));
+	channelFound = false;
 	return (inserted.first->second);
 }
 

@@ -1,6 +1,7 @@
 #pragma once
 
 //Commands
+#include "IRC.hpp"
 #include "Invite.hpp"
 #include "Join.hpp"
 #include "Kick.hpp"
@@ -51,15 +52,22 @@ class Channel {
 		void	addOperator(Client& client);
 		void	removeMember(Client& client);
 		void	removeOperator(Client& client);
+		bool	removeClientEverywhere(Client& client, const std::string& reason);
 		void	memberToOperator(Client& client);
 		void	operatorToMember(Client& client);
 
-		void	publicMessage(const std::string& msg) const;
 
 		bool	isFull(void) const;
 		bool	isMember(Client& client) const;
 		bool	isOperator(Client& client) const;
+		void	publicMessage(const std::string& msg, const Client* sender = nullptr) const;
 		bool	invite(const std::string& nickname);
+
+		// Numeric codes
+		static void	sendNumeric(Client& client, IRC::NumericCodes code,
+			const std::string& params = "", const std::string& trailing = "");
+
+
 
 		//Getters
 		const std::string&	getName(void) const { return (this->_name); };
@@ -83,13 +91,15 @@ class Channel {
 		void	setTopic(std::string_view topic, Client& client);
 		void	setUserLimit(std::size_t members);
 		void	clearUserLimit(void);
+		static bool	isValidChannelName(std::string_view name);
 
 		//Commands
-		static bool				isChannelCommand(std::unordered_map<std::string, Channel>& channels,
+		static bool				isChannelCommand(Server& server,
+			std::unordered_map<std::string, Channel>& channels,
 			Client& client, const std::string& command,
 			const std::vector<std::string_view>& params);
-		static AChannelCommand*	makeCommand(const std::string& command, Client& client,
-			std::unordered_map<std::string, Channel>& channels);
+		static AChannelCommand*	makeCommand(Server& server, const std::string& command,
+			Client& client, std::unordered_map<std::string, Channel>& channels);
 		static int				makeCommandNumber(const std::string& command);
 
 		//Exception messages

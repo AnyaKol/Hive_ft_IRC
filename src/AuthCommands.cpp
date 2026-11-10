@@ -174,10 +174,24 @@ void Commands::handlePrivMsg(Server& serv, Client& client, Parser& cmd) {
 	std::string target = std::string(cmd.getParams()[0]);
 	std::string message = std::string(cmd.getParams()[1]);
 
-	// Phase 1 Block: Reject channel messages temporarily
-	if (target[0] == '#') {
-		std::string reply = "403 " + client.getNickname() + " " + target + " :No such channel\r\n";
-		client.appendToWriteBuffer(reply);
+	// Channel target: broadcast to members and operators
+	if (target[0] == '#' || target[0] == '&') {
+		auto& channels = serv.getChannels();
+		auto it = channels.find(target);
+		if (it == channels.end()) {
+			std::string reply = "403 " + client.getNickname() + " " + target + " :No such channel\r\n";
+			client.appendToWriteBuffer(reply);
+			return;
+		}
+		Channel& channel = it->second;
+		if (!channel.isMember(client) && !channel.isOperator(client)) {
+			std::string reply = "404 " + client.getNickname() + " " + target + " :Cannot send to channel\r\n";
+			client.appendToWriteBuffer(reply);
+			return;
+		}
+		channel.publicMessage(":" + client.getNickname() + "!" + client.getUsername() +
+			"@" + client.getHostname() + " PRIVMSG " + target +
+			" :" + message + "\r\n", &client);
 		return;
 	}
 
