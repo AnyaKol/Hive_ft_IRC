@@ -47,15 +47,13 @@ class Channel {
 
 		typedef std::unordered_set<Client*>::iterator	iterator;
 
-		void	addMember(Client& client);
-		void	addMember(Client& client, std::string_view& key);
+		void	addMember(Client& client, std::string_view key = "");
 		void	addOperator(Client& client);
 		void	removeMember(Client& client);
 		void	removeOperator(Client& client);
 		bool	removeClientEverywhere(Client& client, const std::string& reason);
 		void	memberToOperator(Client& client);
 		void	operatorToMember(Client& client);
-
 
 		bool	isFull(void) const;
 		bool	isMember(Client& client) const;
@@ -67,33 +65,35 @@ class Channel {
 		static void	sendNumeric(Client& client, IRC::NumericCodes code,
 			const std::string& params = "", const std::string& trailing = "");
 
-
-
-		//Getters
+		// Getters
 		const std::string&	getName(void) const { return (this->_name); };
 		const std::string&	getTopic(void) const { return (this->_topic); };
 		const std::size_t&	getUserLimit(void) const { return (this->_userLimit); };
-
-		bool	isInviteOnly(void) const { return (this->_inviteOnly); };
-		bool	isTopicProtected(void) const { return (this->_protectedTopic); };
-		bool	hasKey(void) const { return (this->_hasKey); };
-		bool	hasUserLimit(void) const { return (this->_hasUserLimit); };
 		const std::string&	getKey(void) const { return (this->_key); };
 
 		const std::unordered_set<Client*>&	getOperators(void) const { return (this->_operators); };
 		const std::unordered_set<Client*>&	getMembers(void) const { return (this->_members); };
 
+		bool	isInviteOnly(void) const { return (this->_inviteOnly); };
+		bool	isTopicProtected(void) const { return (this->_protectedTopic); };
+		bool	hasKey(void) const { return (this->_hasKey); };
+		bool	hasUserLimit(void) const { return (this->_hasUserLimit); };
+
+		Client*	getClientByNick(const std::string_view& nick) const;
+
+		// Setters
 		void	setName(std::string_view name);
-		void	setKey(std::string key);
+		void	setKey(std::string key, Client& client) ;
 		void	clearKey(void);
 		void	setInviteOnly(bool value);
 		void	setTopicProtected(bool value);
 		void	setTopic(std::string_view topic, Client& client);
 		void	setUserLimit(std::size_t members);
 		void	clearUserLimit(void);
+
 		static bool	isValidChannelName(std::string_view name);
 
-		//Commands
+		// Commands
 		static bool				isChannelCommand(Server& server,
 			std::unordered_map<std::string, Channel>& channels,
 			Client& client, const std::string& command,
@@ -102,18 +102,18 @@ class Channel {
 			Client& client, std::unordered_map<std::string, Channel>& channels);
 		static int				makeCommandNumber(const std::string& command);
 
-		//Exception messages
+		// Exception messages
 		static const std::string	ERR_NOT_CHANNEL_COMMAND;
 		static const std::string	ERR_WRONG_NUM_PARAM;
 
-		//NameException messages
+		// NameException messages
 		static const std::string	ERR_CREATE_CHANNEL;
 
 		class	Exception;
 		class	NameException;
 };
 
-//Exceptions
+// Exceptions
 class	Channel::Exception : public std::exception {
 	private:
 		Exception(void) = delete;

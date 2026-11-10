@@ -22,15 +22,16 @@ void	Part::execute(const std::vector<std::string_view>& params) {
 		if (it == this->AChannelCommand::allChannels.end())
 			continue; // no such channel
 		Channel& channel = it->second;
-		std::string	partMsg = ":" + who.getNickname() + "!" + who.getUsername() +
-			"@" + who.getHostname() + " PART " + std::string(channelName) +
-			" :" + std::string(reason) + "\r\n";
 
 		// Sender must already be on the channel
 		if (!channel.isMember(who) && !channel.isOperator(who))
 			continue;
 
-		// Reason goes to all members and operators, including the sender
+		// Create custom user message
+		std::string	partMsg = ":" + who.getNickname() + "!" + who.getUsername() +
+			"@" + who.getHostname() + " PART " + std::string(channelName) +
+			" :" + std::string(reason) + "\r\n";
+		// Sender also gets the message
 		channel.publicMessage(partMsg);
 
 		channel.removeMember(who);

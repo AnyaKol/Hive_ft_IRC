@@ -10,7 +10,8 @@ namespace mode {
 		INVITE_ONLY = static_cast<int>('i'),
 		PROTECTED_TOPIC = static_cast<int>('t'),
 		HAS_KEY = static_cast<int>('k'),
-		HAS_USER_LIMIT = static_cast<int>('l')
+		HAS_USER_LIMIT = static_cast<int>('l'),
+		OPS_PRIVILIGES = static_cast<int>('o')
 	};
 }
 
@@ -23,6 +24,7 @@ void	Mode::execute(const std::vector<std::string_view>& params) {
 		Channel::sendNumeric(who, IRC::ERR_NOSUCHCHANNEL, std::string(params[0]), "No such channel");
 		return;
 	}
+	//TODO: can be sent on username
 	Channel& channel = channelIt->second;
 
 	// Only 1 argument: query - reply with current modes, key hidden
@@ -64,7 +66,7 @@ void	Mode::execute(const std::vector<std::string_view>& params) {
 			case mode::HAS_KEY:
 				if (adding) {
 					if (argIndex < params.size()) {
-						channel.setKey(std::string(params[argIndex]));
+						channel.setKey(std::string(params[argIndex]), who);
 						argIndex++;
 					}
 				} else {
@@ -76,10 +78,10 @@ void	Mode::execute(const std::vector<std::string_view>& params) {
 					if (argIndex < params.size()) {
 						// Accept only digits: rejects signs, spaces, and empty input
 						std::string_view	limitStr = params[argIndex];
-						bool	valid = !limitStr.empty()
-							&& limitStr.size() <= 19	// cannot overflow size_t (max 20 digits)
-							&& limitStr.find_first_not_of("0123456789") == std::string_view::npos;
-						if (!valid) {
+
+						if (limitStr.empty()
+							|| limitStr.size() > 19	// cannot overflow size_t (max 20 digits)
+							|| limitStr.find_first_not_of("0123456789") != std::string_view::npos) {
 							who.appendToWriteBuffer(IRC::Reply::errInvalidModeParam(who.getNickname(),
 								std::string(params[0]), 'l', limitStr, "Invalid limit parameter"));
 						} else {
@@ -89,6 +91,23 @@ void	Mode::execute(const std::vector<std::string_view>& params) {
 					}
 				} else {
 					channel.clearUserLimit();
+				}
+				break;
+			case mode::OPS_PRIVILIGES:
+				if (argIndex < params.size()) {
+					std::string_view	nickname = params[argIndex];
+					Client*				target = channel.getClientByNick(std::string(nickname));
+
+					if (!target) {
+						Channel::sendNumeric(who, IRC::ERR_NOSUCHNICK, std::string(nickname), "No such nick/channel");
+						return;
+					}
+
+					if (adding) {
+						channel.memberToOperator(*target);
+					} else {
+						channel.operatorToMember(*target);
+					}
 				}
 				break;
 			default:

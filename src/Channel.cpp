@@ -27,7 +27,12 @@ void	Channel::setName(std::string_view name) {
 	this->_name = name;
 }
 
-void	Channel::setKey(std::string key) {
+void	Channel::setKey(std::string key, Client& client) {
+	if (key.empty() || key[0] == '#' || key[0] == '&' || key[0] == 'x') {
+		Channel::sendNumeric(client, IRC::ERR_INVALIDKEY, this->_name);
+		return;
+	}
+
 	this->_key = std::move(key);
 	this->_hasKey = true;
 }
@@ -56,19 +61,17 @@ void	Channel::setTopicProtected(bool value) {
 	this->_protectedTopic = value;
 }
 
-/* Clears the channel key */
 void	Channel::clearKey(void) {
 	this->_key.clear();
 	this->_hasKey = false;
 }
 
-/* Clears the user limit */
 void	Channel::clearUserLimit(void) {
 	this->_userLimit = 0;
 	this->_hasUserLimit = false;
 }
 
-void	Channel::addMember(Client& client) {
+void	Channel::addMember(Client& client, std::string_view key) {
 	if (this->isMember(client) || this->isOperator(client)) {
 		// JOIN on a channel already joined: no need for a reply
 		return;
@@ -78,10 +81,9 @@ void	Channel::addMember(Client& client) {
 			Channel::sendNumeric(client, IRC::ERR_INVITEONLYCHAN, this->_name, "Cannot join channel (+i)");
 			return;
 		}
-		this->_pendingInvites.erase(this->_pendingInvites.find(client.getNickname()));//Remove from invites
 	}
-	if (this->_hasKey) {
-		// No key supplied but channel requires one
+	if (this->_hasKey && this->_key != key) {
+		// No key supplied or wrong key
 		Channel::sendNumeric(client, IRC::ERR_BADCHANNELKEY, this->_name, "Cannot join channel (+k)");
 		return;
 	}
@@ -90,31 +92,11 @@ void	Channel::addMember(Client& client) {
 		return;
 	}
 
+	// Add member
 	this->_members.insert(&client);
-}
 
-void	Channel::addMember(Client& client, std::string_view& key) {
-	if (this->isMember(client) || this->isOperator(client)) {
-		// JOIN on a channel already joined: no need for a reply
-		return;
-	}
-	if (this->_inviteOnly) {
-		if ( !this->_pendingInvites.contains(client.getNickname()) ) {
-			Channel::sendNumeric(client, IRC::ERR_INVITEONLYCHAN, this->_name, "Cannot join channel (+i)");
-			return;
-		}
+	if (this->_inviteOnly)
 		this->_pendingInvites.erase(this->_pendingInvites.find(client.getNickname()));//Remove from invites
-	}
-	if (this->_key != key)  {
-		Channel::sendNumeric(client, IRC::ERR_BADCHANNELKEY, this->_name, "Cannot join channel (+k)");
-		return;
-	}
-	if (this->isFull()) {
-		Channel::sendNumeric(client, IRC::ERR_CHANNELISFULL, this->_name, "Cannot join channel (+l)");
-		return;
-	}
-
-	this->_members.insert(&client);
 }
 
 void	Channel::addOperator(Client& client) {
@@ -144,8 +126,10 @@ bool	Channel::removeClientEverywhere(Client& client, const std::string& reason) 
 	if (!wasHere)
 		return (false);
 
+	// Create custom user message
 	std::string	quitMsg = ":" + client.getNickname() + "!" + client.getUsername() +
 		"@" + client.getHostname() + " QUIT :Quit: " + reason + "\r\n";
+	// Sender doesn't get the message
 	this->publicMessage(quitMsg, &client);
 
 	this->removeMember(client);
@@ -162,16 +146,19 @@ bool	Channel::invite(const std::string& nickname) {
 }
 
 void	Channel::memberToOperator(Client& client) {
+	if (this->isOperator(client))
+		return;
 	this->removeMember(client);
-	this->addOperator(client);
+	this->_operators.insert(&client);
 }
 
 void	Channel::operatorToMember(Client& client) {
+	if (this->isMember(client))
+		return;
 	this->removeOperator(client);
-	this->addMember(client);
+	this->_members.insert(&client);
 }
 
-/* True if client is in _members / _operators */
 bool	Channel::isMember(Client& client) const {
 	return (this->_members.contains(&client));
 }
@@ -187,6 +174,22 @@ bool	Channel::isFull(void) const {
 	if (this->_members.size() + this->_operators.size() >= this->_userLimit)
 		return (true);
 	return (false);
+}
+
+Client*	Channel::getClientByNick(const std::string_view& nickname) const {
+	// Check members 
+	for (Client* client : this->_members) {
+		if (client->getNickname() == nickname) {
+			return (client);
+		}
+	}
+	// Check operators
+	for (Client* client : this->_operators) {
+		if (client->getNickname() == nickname) {
+			return (client);
+		}
+	}
+	return nullptr;
 }
 
 /* Channel name may not contain any spaces (' ', 0x20), a control G / BELL

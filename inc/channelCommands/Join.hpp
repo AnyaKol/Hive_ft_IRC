@@ -13,6 +13,8 @@ class Join : public virtual AChannelCommand {
 		std::vector<std::string_view>	channels;
 		std::vector<std::string_view>	keys {};
 
+		void	sendJoinMessage(Channel& channel) const;
+
 	public:
 		Join(Client& client, std::unordered_map<std::string, Channel>& channels, Server& server);
 		Join(const Join&) = delete;

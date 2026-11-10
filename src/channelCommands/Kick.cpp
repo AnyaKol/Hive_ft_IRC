@@ -34,19 +34,7 @@ void	Kick::execute(const std::vector<std::string_view>& params) {
 
 	// Kick each target: announce, then remove from members and operators
 	for (std::string_view nickname : nicknames) {
-		Client* target = NULL;
-		for (Client* member : channel.getMembers()) {
-			if (member->getNickname() == nickname) {
-				target = member;
-				break;
-			}
-		}
-		for (Client* op : channel.getOperators()) {
-			if (op->getNickname() == nickname) {
-				target = op;
-				break;
-			}
-		}
+		Client* target = channel.getClientByNick(nickname);
 
 		if (!target) {
 			// 441: target nick is not on this channel
@@ -55,9 +43,11 @@ void	Kick::execute(const std::vector<std::string_view>& params) {
 			continue;
 		}
 
+		// Create custom user message
 		std::string	kickMsg = ":" + who.getNickname() + "!" + who.getUsername() +
 			"@" + who.getHostname() + " KICK " + std::string(channelName) + " " +
 			std::string(nickname) + " :" + reason + "\r\n";
+		// Sender also gets the message
 		channel.publicMessage(kickMsg);
 
 		channel.removeMember(*target);
