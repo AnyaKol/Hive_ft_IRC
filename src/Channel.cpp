@@ -2,7 +2,15 @@
 #include "Client.hpp"
 #include "IRC.hpp"
 
-#include <algorithm>
+// Channel commands
+#include "Invite.hpp"
+#include "Join.hpp"
+#include "Kick.hpp"
+#include "Mode.hpp"
+#include "Names.hpp"
+#include "Part.hpp"
+#include "Topic.hpp"
+
 #include <vector>
 //For unique pointer
 #include <memory>

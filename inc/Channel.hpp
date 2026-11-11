@@ -2,15 +2,8 @@
 
 //Commands
 #include "IRC.hpp"
-#include "Invite.hpp"
-#include "Join.hpp"
-#include "Kick.hpp"
-#include "Mode.hpp"
-#include "Names.hpp"
-#include "Part.hpp"
-#include "Topic.hpp"
+#include "AChannelCommand.hpp"
 
-#include <iostream>
 #include <string>
 #include <string_view>
 #include <unordered_map>
@@ -90,7 +83,6 @@ class Channel {
 		void	setTopic(std::string_view topic, Client& client);
 		void	setUserLimit(std::size_t members);
 		void	clearUserLimit(void);
-
 		static bool	isValidChannelName(std::string_view name);
 
 		// Commands

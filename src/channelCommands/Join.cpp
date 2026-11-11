@@ -25,34 +25,35 @@ void	Join::execute(const std::vector<std::string_view>& params) {
 	// Go through <channels> and add executing client; if <key> = "x" then skip it
 
 	try {
-		std::vector<std::string_view>::iterator nextKey = this->keys.begin();
+		for (std::size_t i = 0; i < this->channels.size(); ++i) {
+			std::string_view channelName = this->channels[i];
 
-		for (std::string_view channelName : this->channels) {
-			// Reject empty/invalid channel names (irssi sends "JOIN :" with empty trailing on connect)
-			if (!Channel::isValidChannelName(channelName))
+			// Reject empty/invalid channel names (irssi sends "JOIN :" with empty trailing on connect);
+			// keep processing the rest of the list
+			if (!Channel::isValidChannelName(channelName)) {
+				Channel::sendNumeric(this->AChannelCommand::executor, IRC::ERR_BADCHANMASK, std::string(channelName));
 				continue;
+			}
+
+			// <key> paired with this <channel> by index; "x" means no key for this channel
+			const bool	hasKey = i < this->keys.size() && this->keys[i] != "x";
 
 			bool	channelFound = false;
 			Channel& channel = findChannel(channelName, channelFound);
 
-			// Creator of a new channel is already operator; just confirm the JOIN to them
+			// Creator of a new channel is already operator, don't need to add
 			if (channelFound) {
-				if (nextKey < this->keys.end() && *nextKey != "x")
-					channel.addMember(this->AChannelCommand::executor, *nextKey);
+				if (hasKey)
+					channel.addMember(this->AChannelCommand::executor, this->keys[i]);
 				else
 					channel.addMember(this->AChannelCommand::executor);
-				
+
 				// Failed to add client for some reason; continue without join message
 				if (!channel.isMember(this->AChannelCommand::executor) && !channel.isOperator(this->AChannelCommand::executor))
 					continue;
 			}
 
 			this->sendJoinMessage(channel);
-
-			if (nextKey < this->keys.end())
-				nextKey++;
-
-			std::cout << "Joining: " << channelName << std::endl;
 		}
 	} catch (Channel::Exception &e) { // Expected command failures
 		return;

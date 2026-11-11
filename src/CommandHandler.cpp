@@ -3,12 +3,7 @@
 #include "Client.hpp"
 #include "Parser.hpp"
 #include "IRC.hpp"
-
-//Included channel
 #include "Channel.hpp"
-
-#include <sys/socket.h>
-#include <iostream>
 
 void Commands::processCommand(Server& serv, Client& client, Parser& cmd) {
 
@@ -32,8 +27,7 @@ void Commands::processCommand(Server& serv, Client& client, Parser& cmd) {
 		return;
 	}
 
-	// Channel Commands (Add later)
-	//Check if it's a channel command; if it is - execute and return
+	// Check if it's a channel command; if it is - execute and return
 	if (Channel::isChannelCommand(serv, serv.getChannels(), client, command, cmd.getParams())) {
 		return;
 	}
@@ -42,6 +36,7 @@ void Commands::processCommand(Server& serv, Client& client, Parser& cmd) {
 	if (command == "PONG") { handlePong(serv, client, cmd); return; }
 	if (command == "QUIT") { handleQuit(serv, client, cmd); return; }
 	if (command == "PRIVMSG") { handlePrivMsg(serv, client, cmd); return; }
+	if (command == "WHO") { return; } // irssi sends WHO on channel open: ignore silently
 
 	// THE CATCH-ALL: Command not found
 	if (command == "UNKNOWN") {

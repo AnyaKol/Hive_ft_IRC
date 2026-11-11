@@ -13,7 +13,6 @@ class Server;
 class AChannelCommand {
 	protected:
 		Channel&	findChannel(const std::string_view& channelName, bool& channelFound);
-
 		std::vector<std::string_view>	splitByCommas(
 			const std::string_view& paramWithCommas);
 

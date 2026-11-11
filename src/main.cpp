@@ -2,11 +2,9 @@
 
 #include <exception>
 #include <iostream>
-#include <string>
-#include <string_view>
-#include <charconv>
-#include <system_error>
+#include <csignal>
 #include <cstdlib>
+
 
 int main(int ac, char *av[]) {
 
@@ -35,6 +33,7 @@ int main(int ac, char *av[]) {
     try {
         signal(SIGINT, Server::signalHandler);
         signal(SIGQUIT, Server::signalHandler);
+        signal(SIGTERM, Server::signalHandler); // Signal sent by kill <pid>
         signal(SIGPIPE, SIG_IGN); // Ignore SIGPIPE to prevent server crash when writing to a closed socket
         if (server.initServer()) {
         std::cout << "Server initialized successfully, waiting for connections..\n";

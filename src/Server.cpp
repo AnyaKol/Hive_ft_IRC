@@ -2,23 +2,24 @@
 #include "Parser.hpp"
 #include "Commands.hpp"
 
+#include <ctime>
+#include "IRC.hpp"
+
 #include <arpa/inet.h>
-#include <cstddef>
-#include <cerrno>
 #include <cstring>
 #include <fcntl.h>
 #include <iostream>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <sys/types.h>
 #include <unistd.h>
-#include <stdlib.h>
+
 
 bool	Server::_signal = false;
 
 void	Server::signalHandler(int sig) {
 
 	(void)sig;
-	std::cout << "\nSignal Arrived!\n";
 	Server::_signal = true;
 }
 
@@ -74,8 +75,15 @@ bool	Server::initServer() {
 	server_pollfd.revents = 0;
 	this->_pollfds.push_back(server_pollfd);
 
-	return true;
-
+	// Record server creation time (for RPL_CREATED 003) and ISUPPORT tokens
+	// (for RPL_ISUPPORT 005) now that the server is initialized
+	char	timebuf[64] {};
+	std::time_t now = std::time(nullptr);
+	std::tm*	utc = std::gmtime(&now);
+	std::strftime(timebuf, sizeof(timebuf), "%a %b %d %Y %H:%M:%S UTC", utc);
+	this->_creationTime = timebuf;
+	this->_isupportTokens = IRC::ISUPPORT_TOKENS;
+	return (true);
 }
 
 void Server::runServer() {
@@ -208,10 +216,8 @@ void	Server::receiveData(int fd) {
 	buffer[received_data] = '\0';
 	_clients[fd].appendToReadBuffer(buffer);
 
-	//Print out client buffer for testing
-    std::cout << "Got message from fd " << fd << ": '" << buffer << "'" << std::endl;//TODO: Remove after testing
-
-	while (_clients[fd].hasCompleteCommand()) { // we can have multiple commands in the buffer, so we need to process them all
+	// We can have multiple commands in the buffer, so we need to process them all
+	while (_clients[fd].hasCompleteCommand()) {
 
 		std::string command = _clients[fd].extractCommandFromBuffer();
 		Parser cmd(command);
@@ -223,7 +229,8 @@ void Server::clearClient(int fd) {
 
 	for (std::vector<struct pollfd>::iterator it = _pollfds.begin(); it != _pollfds.end(); ++it) {
 		if (it->fd == fd) {
-			_pollfds.erase(it); // careful with erase it shift to the left.. need to keep track of correct num of clients
+			// Careful with erase it shift to the left.. need to keep track of correct num of clients
+			_pollfds.erase(it);
 			break;
 		}
 	}
@@ -276,5 +283,5 @@ Client* Server::getClientByNick(const std::string& nickname) {
 			return &(pair.second);
 		}
 	}
-	return NULL;
+	return nullptr;
 }

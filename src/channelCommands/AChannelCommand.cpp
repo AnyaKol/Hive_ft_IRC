@@ -32,12 +32,11 @@ Channel&	AChannelCommand::findChannel(const std::string_view& channelName, bool&
 	channelFound = false;
 	return (inserted.first->second);
 }
-
 std::vector<std::string_view>	AChannelCommand::splitByCommas( 
 	const std::string_view& paramWithCommas) {
 
 	std::vector<std::string_view>	paramVector {};
-	auto range = std::ranges::views::split(paramWithCommas, ",");
+	auto range = std::ranges::views::split(paramWithCommas, ',');
 
 	for (const auto& param : range) {
 		paramVector.push_back( std::string_view(param.begin(), param.end()) );
