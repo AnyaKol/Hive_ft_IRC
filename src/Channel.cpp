@@ -2,7 +2,15 @@
 #include "Client.hpp"
 #include "IRC.hpp"
 
-#include <algorithm>
+// Channel commands
+#include "Invite.hpp"
+#include "Join.hpp"
+#include "Kick.hpp"
+#include "Mode.hpp"
+#include "Names.hpp"
+#include "Part.hpp"
+#include "Topic.hpp"
+
 #include <vector>
 //For unique pointer
 #include <memory>
@@ -28,7 +36,7 @@ void	Channel::setName(std::string_view name) {
 }
 
 void	Channel::setKey(std::string key, Client& client) {
-	if (key.empty() || key[0] == '#' || key[0] == '&' || key[0] == 'x') {
+	if (key.empty() || key[0] == '#' || key[0] == '&' || key == "x") {
 		Channel::sendNumeric(client, IRC::ERR_INVALIDKEY, this->_name);
 		return;
 	}
@@ -96,7 +104,7 @@ void	Channel::addMember(Client& client, std::string_view key) {
 	this->_members.insert(&client);
 
 	if (this->_inviteOnly)
-		this->_pendingInvites.erase(this->_pendingInvites.find(client.getNickname()));//Remove from invites
+		this->_pendingInvites.erase(this->_pendingInvites.find(client.getNickname())); //Remove from invites
 }
 
 void	Channel::addOperator(Client& client) {

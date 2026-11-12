@@ -4,15 +4,11 @@
 #include "Channel.hpp"
 
 #include <sys/poll.h>
-#include <sys/types.h>
-#include <iostream>
-#include <csignal>
 #include <cstdint>
 #include <fstream>
 #include <string>
 #include <string_view>
 
-#include <memory>
 #include <unordered_map> // pair key value dicionary (e.g socket/ client)
 #include <vector>
 
@@ -24,8 +20,9 @@ class Server {
 		std::uint16_t	_port{};
 		std::string		_password;
 		int				_serverSocket{};
+		std::string		_creationTime;   // RPL_CREATED (003)
+		std::string		_isupportTokens; // RPL_ISUPPORT (005)
 		std::string		_hostname;
-		std::ofstream	_serverLog; // record server events
 		static bool		_signal;
 
 		std::unordered_map<int, Client>						_clients;
@@ -47,6 +44,8 @@ class Server {
 		std::uint16_t					getPort() const { return (this->_port); };
 		const std::string&				getPassword() const { return (this->_password); };
 		const std::string&				getHostname() const { return (this->_hostname); };
+		const std::string&				getCreationTime() const { return (this->_creationTime); };
+		const std::string&				getIsupportTokens() const { return (this->_isupportTokens); };
 		std::unordered_map<std::string, Channel>&	getChannels() { return (this->_channels); };
 
 

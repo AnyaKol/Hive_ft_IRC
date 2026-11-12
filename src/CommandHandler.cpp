@@ -3,12 +3,7 @@
 #include "Client.hpp"
 #include "Parser.hpp"
 #include "IRC.hpp"
-
-//Included channel
 #include "Channel.hpp"
-
-#include <sys/socket.h>
-#include <iostream>
 
 void Commands::processCommand(Server& serv, Client& client, Parser& cmd) {
 
@@ -18,11 +13,7 @@ void Commands::processCommand(Server& serv, Client& client, Parser& cmd) {
 	if (command == "PASS") { handlePass(serv, client, cmd); return; }
 	if (command == "NICK") { handleNick(serv, client, cmd); return; }
 	if (command == "USER") { handleUser(serv, client, cmd); return; }
-	if (command == "CAP") {
-		// Reply to CAP LS so clients like irssi finish negotiation and register immediately
-		client.appendToWriteBuffer("CAP * LS :\r\n");
-		return;
-	}
+	if (command == "CAP") { return; }
 
 
 	// If they are not registered, block all other commands
@@ -32,8 +23,7 @@ void Commands::processCommand(Server& serv, Client& client, Parser& cmd) {
 		return;
 	}
 
-	// Channel Commands (Add later)
-	//Check if it's a channel command; if it is - execute and return
+	// Check if it's a channel command; if it is - execute and return
 	if (Channel::isChannelCommand(serv, serv.getChannels(), client, command, cmd.getParams())) {
 		return;
 	}
@@ -42,10 +32,15 @@ void Commands::processCommand(Server& serv, Client& client, Parser& cmd) {
 	if (command == "PONG") { handlePong(serv, client, cmd); return; }
 	if (command == "QUIT") { handleQuit(serv, client, cmd); return; }
 	if (command == "PRIVMSG") { handlePrivMsg(serv, client, cmd); return; }
+	if (command == "WHO") { return; } // irssi sends WHO on channel open: ignore silently
+	if (command == "WHOIS") {
+		std::string reply = IRC::Reply::endOfWhoIs(client.getNickname(), cmd.getParams()[0]);
+		client.appendToWriteBuffer(reply);
+		return;
+	} // irssi sends WHOIS if nickname is in use
 
 	// THE CATCH-ALL: Command not found
 	if (command == "UNKNOWN") {
-
 		std::string reply = IRC::Reply::errUnknownCommand(client.getNickname(), cmd.getCommand());
 		client.appendToWriteBuffer(reply);
 	}

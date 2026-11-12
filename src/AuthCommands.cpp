@@ -4,7 +4,6 @@
 #include "Parser.hpp"
 #include "IRC.hpp"
 
-#include <sys/socket.h>
 #include <iostream>
 
 // PASS <password>
@@ -58,30 +57,41 @@ void Commands::handleNick(Server& serv, Client& client, Parser& cmd) {
 	}
 
 	std::string oldNickname = client.getNickname();
+	std::string newNickname = std::string(nickname);
+
 	bool wasRegistered = client.isRegistered();
 
-	client.setNickname(nickname);
+	client.setNickname(newNickname);
 
 	std::cout << "Client on socket " << client.getSocket() << " set nickname to: " << client.getNickname() << "\n";
 
 	if (!wasRegistered && client.isRegistered()) { // only print welcome to the user if they were not registred before
-		std::string welcomeMsg = IRC::Reply::welcome(client.getNickname(), client.getUsername(), client.getHostname());
-		client.appendToWriteBuffer(welcomeMsg);
+		client.appendToWriteBuffer(IRC::Reply::welcome(client.getNickname(), client.getUsername(), client.getHostname()));
+		//client.appendToWriteBuffer(IRC::Reply::yourHost(client.getNickname()));
+		//client.appendToWriteBuffer(IRC::Reply::created(client.getNickname(), serv.getCreationTime()));
+		//client.appendToWriteBuffer(IRC::Reply::myInfo(client.getNickname()));
+		//client.appendToWriteBuffer(IRC::Reply::isSupport(client.getNickname(), serv.getIsupportTokens()));
 	}
 	 else if (wasRegistered) {
 		// If they are already registered and changing their name, send the confirmation back to them! so irssi updates the interface
 		std::string reply = ":" + oldNickname + "!" + client.getUsername() + "@" + client.getHostname() + " NICK :" + client.getNickname() + "\r\n";
 		client.appendToWriteBuffer(reply);
 
-		// (Note: Later when you build Channels, you will also need to broadcast this 'reply' string
-		// to every other person in their channels so their screens update too!)
+		std::string nickMsg =
+		":" + oldNickname + "!" + client.getUsername() + "@" + client.getHostname() + " NICK :" + newNickname + "\r\n";
+
+		for (auto& [channelName, channel] : serv.getChannels()) {
+			if (channel.isMember(client) || channel.isOperator(client)) {
+				channel.publicMessage(nickMsg, &client);
+			}
+		}
 	}
 
 	return;
 }
 
 // USER <username> <mode> <unused> <realname>
-void    Commands::handleUser(Server& serv, Client& client, Parser& cmd) {
+void	Commands::handleUser(Server& serv, Client& client, Parser& cmd) {
 
 	(void)serv;
 
@@ -109,8 +119,11 @@ void    Commands::handleUser(Server& serv, Client& client, Parser& cmd) {
 	client.setRealname(cmd.getParams()[3]);
 
 	if (client.isRegistered()) {
-		std::string welcomeMsg = IRC::Reply::welcome(client.getNickname(), client.getUsername(), client.getHostname());
-		client.appendToWriteBuffer(welcomeMsg);
+		client.appendToWriteBuffer(IRC::Reply::welcome(client.getNickname(), client.getUsername(), client.getHostname()));
+		client.appendToWriteBuffer(IRC::Reply::yourHost(client.getNickname()));
+		client.appendToWriteBuffer(IRC::Reply::created(client.getNickname(), serv.getCreationTime()));
+		client.appendToWriteBuffer(IRC::Reply::myInfo(client.getNickname()));
+		client.appendToWriteBuffer(IRC::Reply::isSupport(client.getNickname(), serv.getIsupportTokens()));
 	}
 
 	return;
@@ -171,44 +184,57 @@ void Commands::handlePrivMsg(Server& serv, Client& client, Parser& cmd) {
 		return;
 	}
 
-	std::string target = std::string(cmd.getParams()[0]);
+	// PRIVMSG accepts up to TARGMAX PRIVMSG (4) comma-separated targets,
+	// each processed independently; one bad target does not stop the others
+	const std::vector<std::string_view> targets = IRC::splitByCommas(cmd.getParams()[0]);
+	if (targets.size() > IRC::TARGMAX_PRIVMSG)
+		return; // silently drop when over the advertised limit
+
 	std::string message = std::string(cmd.getParams()[1]);
 
-	// Channel target: broadcast to members and operators
-	if (target[0] == '#' || target[0] == '&') {
-		auto& channels = serv.getChannels();
-		auto it = channels.find(target);
-		if (it == channels.end()) {
-			std::string reply = "403 " + client.getNickname() + " " + target + " :No such channel\r\n";
-			client.appendToWriteBuffer(reply);
-			return;
+	for (const std::string_view targetView : targets) {
+		std::string target(targetView);
+
+		// Skip empty elements (e.g. trailing comma) rather than erroring
+		if (target.empty())
+			continue;
+
+		// Channel target: broadcast to members and operators
+		if (target[0] == '#' || target[0] == '&') {
+			auto& channels = serv.getChannels();
+			auto it = channels.find(target);
+			if (it == channels.end()) {
+				std::string reply = "403 " + client.getNickname() + " " + target + " :No such channel\r\n";
+				client.appendToWriteBuffer(reply);
+				continue;
+			}
+			Channel& channel = it->second;
+			if (!channel.isMember(client) && !channel.isOperator(client)) {
+				std::string reply = "404 " + client.getNickname() + " " + target + " :Cannot send to channel\r\n";
+				client.appendToWriteBuffer(reply);
+				continue;
+			}
+			channel.publicMessage(":" + client.getNickname() + "!" + client.getUsername() +
+				"@" + client.getHostname() + " PRIVMSG " + target +
+				" :" + message + "\r\n", &client);
+			continue;
 		}
-		Channel& channel = it->second;
-		if (!channel.isMember(client) && !channel.isOperator(client)) {
-			std::string reply = "404 " + client.getNickname() + " " + target + " :Cannot send to channel\r\n";
+
+		// 3. Find the target user
+		Client* targetClient = serv.getClientByNick(target);
+
+		// 4. Handle user not found
+		if (!targetClient) {
+			std::string reply = "401 " + client.getNickname() + " " + target + " :No such nick/channel\r\n";
 			client.appendToWriteBuffer(reply);
-			return;
+			continue;
 		}
-		channel.publicMessage(":" + client.getNickname() + "!" + client.getUsername() +
-			"@" + client.getHostname() + " PRIVMSG " + target +
-			" :" + message + "\r\n", &client);
-		return;
+
+		// 5. Forward the exact IRC string to the receiving client's buffer
+		std::string forwardMsg = ":" + client.getNickname() + "!" + client.getUsername() +
+								 "@" + client.getHostname() + " PRIVMSG " + target +
+								 " :" + message + "\r\n";
+
+		targetClient->appendToWriteBuffer(forwardMsg);
 	}
-
-	// 3. Find the target user
-	Client* targetClient = serv.getClientByNick(target);
-
-	// 4. Handle user not found
-	if (!targetClient) {
-		std::string reply = "401 " + client.getNickname() + " " + target + " :No such nick/channel\r\n";
-		client.appendToWriteBuffer(reply);
-		return;
-	}
-
-	// 5. Forward the exact IRC string to the receiving client's buffer
-	std::string forwardMsg = ":" + client.getNickname() + "!" + client.getUsername() + 
-							 "@" + client.getHostname() + " PRIVMSG " + target + 
-							 " :" + message + "\r\n";
-							 
-	targetClient->appendToWriteBuffer(forwardMsg);
 }

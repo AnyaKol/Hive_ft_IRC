@@ -2,23 +2,24 @@
 #include "Parser.hpp"
 #include "Commands.hpp"
 
+#include <ctime>
+#include "IRC.hpp"
+
 #include <arpa/inet.h>
-#include <cstddef>
-#include <cerrno>
 #include <cstring>
 #include <fcntl.h>
 #include <iostream>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <sys/types.h>
 #include <unistd.h>
-#include <stdlib.h>
+
 
 bool	Server::_signal = false;
 
 void	Server::signalHandler(int sig) {
 
 	(void)sig;
-	std::cout << "\nSignal Arrived!\n";
 	Server::_signal = true;
 }
 
@@ -29,12 +30,6 @@ bool	Server::initServer() {
 
 	int ret{};
 	struct pollfd server_pollfd;
-
-	_serverLog.open("BackLog.txt", std::ofstream::trunc);
-	if (!_serverLog.is_open()) {
-		std::cerr << "Failed to open server log file." << std::endl;
-		return false;
-	}
 
 	_serverSocket = socket(AF_INET, SOCK_STREAM, 0);
 	if (-1 == _serverSocket) {
@@ -74,8 +69,13 @@ bool	Server::initServer() {
 	server_pollfd.revents = 0;
 	this->_pollfds.push_back(server_pollfd);
 
-	return true;
-
+	char	timebuf[64] {};
+	std::time_t now = std::time(nullptr);
+	std::tm*	utc = std::gmtime(&now);
+	std::strftime(timebuf, sizeof(timebuf), "%a %b %d %Y %H:%M:%S UTC", utc);
+	this->_creationTime = timebuf;
+	this->_isupportTokens = IRC::ISUPPORT_TOKENS;
+	return (true);
 }
 
 void Server::runServer() {
@@ -95,7 +95,7 @@ void Server::runServer() {
 			}
 		}
 
-		if (poll(&_pollfds[0], _pollfds.size(), -1) == -1) { // block until an event occur
+		if (poll(&_pollfds[0], _pollfds.size(), -1) == -1) {
 			if (!_signal) {
 				std::cerr << "Error: Poll failed!" << std::endl;
 			}
@@ -106,14 +106,14 @@ void Server::runServer() {
 
 			if (_pollfds[i].revents & POLLIN) {
 
-				if (_pollfds[i].fd == _serverSocket) { // the event is from the server socket, meaning new client is connecting
+				if (_pollfds[i].fd == _serverSocket) { 
 					acceptClient();
 				} else {
 
 					size_t current_size = _pollfds.size();
 					receiveData(_pollfds[i].fd);
 					if (_pollfds.size() < current_size) {
-						i--; // Decrement i so we don't skip the element that just shifted left from clearClient.
+						i--; 
 						continue;
 					}
 				}
@@ -204,14 +204,12 @@ void	Server::receiveData(int fd) {
 		return;
 	}
 
-	// parse the data and process it.
+	
 	buffer[received_data] = '\0';
 	_clients[fd].appendToReadBuffer(buffer);
 
-	//Print out client buffer for testing
-    std::cout << "Got message from fd " << fd << ": '" << buffer << "'" << std::endl;//TODO: Remove after testing
-
-	while (_clients[fd].hasCompleteCommand()) { // we can have multiple commands in the buffer, so we need to process them all
+	
+	while (_clients[fd].hasCompleteCommand()) {
 
 		std::string command = _clients[fd].extractCommandFromBuffer();
 		Parser cmd(command);
@@ -223,7 +221,8 @@ void Server::clearClient(int fd) {
 
 	for (std::vector<struct pollfd>::iterator it = _pollfds.begin(); it != _pollfds.end(); ++it) {
 		if (it->fd == fd) {
-			_pollfds.erase(it); // careful with erase it shift to the left.. need to keep track of correct num of clients
+			
+			_pollfds.erase(it);
 			break;
 		}
 	}
@@ -232,7 +231,7 @@ void Server::clearClient(int fd) {
 	Client&	leaving = _clients[fd];
 	for (auto chIt = _channels.begin(); chIt != _channels.end(); ) {
 		if (chIt->second.removeClientEverywhere(leaving, "Disconnected")) {
-			// Destroy channels left completely empty
+			
 			if (chIt->second.getMembers().empty() && chIt->second.getOperators().empty())
 				chIt = _channels.erase(chIt);
 			else
@@ -269,12 +268,11 @@ bool Server::isNicknameTaken(const std::string_view& nickname) const {
 	return false;
 }
 
-// === ADDED FOR PRIVMSG ===
 Client* Server::getClientByNick(const std::string& nickname) {
 	for (auto& pair : _clients) {
 		if (pair.second.getNickname() == nickname) {
 			return &(pair.second);
 		}
 	}
-	return NULL;
+	return nullptr;
 }

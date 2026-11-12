@@ -12,36 +12,44 @@ CXX ?= c++
 CXXFLAGS = -Wall -Wextra -Werror -std=c++20 -I./inc -I./inc/channelCommands
 DEPFLAGS = -MMD -MP
 
-SRCS = src/main.cpp \
-		src/Server.cpp \
-		src/Parser.cpp \
-		src/Client.cpp \
-		src/CommandHandler.cpp \
-		src/AuthCommands.cpp \
-		src/Channel.cpp \
-		src/channelCommands/AChannelCommand.cpp \
-		src/channelCommands/Invite.cpp \
-		src/channelCommands/Join.cpp \
-		src/channelCommands/Kick.cpp \
-		src/channelCommands/Mode.cpp \
-		src/channelCommands/Names.cpp \
-		src/channelCommands/Part.cpp \
-		src/channelCommands/Topic.cpp \
+SRC_DIR = src
+CHAN_DIR = channelCommands
 
-OBJ_DIR = obj/
+SRCS = main.cpp \
+		Server.cpp \
+		Parser.cpp \
+		Client.cpp \
+		CommandHandler.cpp \
+		AuthCommands.cpp \
+		Channel.cpp \
+		AChannelCommand.cpp \
+		Invite.cpp \
+		Join.cpp \
+		Kick.cpp \
+		Mode.cpp \
+		Names.cpp \
+		Part.cpp \
+		Topic.cpp
 
-OBJS = $(SRCS:src/%.cpp=$(OBJ_DIR)%.o)
+OBJ_DIR = obj
+
+OBJS = $(SRCS:%.cpp=$(OBJ_DIR)/%.o)
 
 DEPS = $(OBJS:%.o=%.d)
 
+# ------------  VPATH  ------------------------------------------------------- #
+VPATH = $(SRC_DIR)/: \
+	$(SRC_DIR)/$(CHAN_DIR):
+
+# ------------  RULES  ------------------------------------------------------- #
 all: $(NAME)
 
 $(NAME): $(OBJS)
-	$(CXX) $(CXXFLAGS) $^ -o $@
+	$(CXX) $(CXXFLAGS) $(OBJS) -o $@
 	@printf "$(GREEN)✓ $(NAME) built successfully!$(RESET)\n"
 	@printf "  Usage: $(YELLOW)./$(NAME) <port> <password>$(RESET)\n"
 
-$(OBJ_DIR)%.o: src/%.cpp
+$(OBJ_DIR)/%.o: %.cpp
 	@mkdir -p $(dir $@)
 	$(CXX) $(CXXFLAGS) $(DEPFLAGS) -c $< -o $@
 	@printf "$(CYAN)  Compiled $<$(RESET)\n"
@@ -56,10 +64,7 @@ fclean: clean
 
 re: fclean all
 
--include $(DEPS)
-
+# ------------  EXTRA  ------------------------------------------------------- #
 .PHONY: all clean fclean re
-
 .SILENT:
-
 .SECONDARY: $(OBJS), $(OBJ_DIR)

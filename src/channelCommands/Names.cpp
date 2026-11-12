@@ -31,12 +31,10 @@ void	Names::execute(const std::vector<std::string_view>& params) {
 
 	// Send name reply (353) and end of names list (366)
 	std::vector<std::string>	opNicks, memNicks;
-
 	for (const Client* op : targetChannel->getOperators())
 		opNicks.push_back(op->getNickname());
 	for (const Client* member : targetChannel->getMembers())
 		memNicks.push_back(member->getNickname());
-
 	Channel::sendNumeric(mutableClient, IRC::RPL_NAMREPLY,
 		targetName, IRC::Reply::namesList(opNicks, memNicks));
 	Channel::sendNumeric(mutableClient, IRC::RPL_ENDOFNAMES, targetName, "End of /NAMES list");

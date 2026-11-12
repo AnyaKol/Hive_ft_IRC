@@ -6,7 +6,7 @@ Invite::Invite(Client& client, std::unordered_map<std::string, Channel>& channel
 : AChannelCommand(client, channels, server) {}
 
 void	Invite::execute(const std::vector<std::string_view>& params) {
-//TODO: Check invite second time
+
 	if (params.size() != 2)
 		throw (Channel::Exception(Channel::ERR_WRONG_NUM_PARAM));
 
@@ -55,4 +55,11 @@ void	Invite::execute(const std::vector<std::string_view>& params) {
 
 	// 341 RPL_INVITING: confirm to the inviter
 	Channel::sendNumeric(who, IRC::RPL_INVITING, std::string(nickname), std::string(params[1]));
+
+	// INVITE message, with the issuer as <source>, to the target user
+	std::string	invMsg = ":" + this->AChannelCommand::executor.getNickname() + "!" +
+		this->AChannelCommand::executor.getUsername() + "@" +
+		this->AChannelCommand::executor.getHostname() + " INVITE " + target->getNickname() + " " +
+		std::string(channel.getName()) + "\r\n";
+	target->appendToWriteBuffer(invMsg);
 }
