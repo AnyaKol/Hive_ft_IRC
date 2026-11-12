@@ -36,7 +36,7 @@ void	Channel::setName(std::string_view name) {
 }
 
 void	Channel::setKey(std::string key, Client& client) {
-	if (key.empty() || key[0] == '#' || key[0] == '&' || key[0] == 'x') {
+	if (key.empty() || key[0] == '#' || key[0] == '&' || key == "x") {
 		Channel::sendNumeric(client, IRC::ERR_INVALIDKEY, this->_name);
 		return;
 	}
