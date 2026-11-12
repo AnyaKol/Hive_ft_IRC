@@ -57,9 +57,11 @@ void Commands::handleNick(Server& serv, Client& client, Parser& cmd) {
 	}
 
 	std::string oldNickname = client.getNickname();
+	std::string newNickname = std::string(nickname);
+
 	bool wasRegistered = client.isRegistered();
 
-	client.setNickname(nickname);
+	client.setNickname(newNickname);
 
 	std::cout << "Client on socket " << client.getSocket() << " set nickname to: " << client.getNickname() << "\n";
 
@@ -75,9 +77,14 @@ void Commands::handleNick(Server& serv, Client& client, Parser& cmd) {
 		std::string reply = ":" + oldNickname + "!" + client.getUsername() + "@" + client.getHostname() + " NICK :" + client.getNickname() + "\r\n";
 		client.appendToWriteBuffer(reply);
 
-		// (Note: Later when you build Channels, you will also need to broadcast this 'reply' string
-		// to every other person in their channels so their screens update too!)
+		std::string nickMsg =
+		":" + oldNickname + "!" + client.getUsername() + "@" + client.getHostname() + " NICK :" + newNickname + "\r\n";
 
+		for (auto& [channelName, channel] : serv.getChannels()) {
+			if (channel.isMember(client) || channel.isOperator(client)) {
+				channel.publicMessage(nickMsg, &client);
+			}
+		}
 	}
 
 	return;
@@ -112,11 +119,11 @@ void	Commands::handleUser(Server& serv, Client& client, Parser& cmd) {
 	client.setRealname(cmd.getParams()[3]);
 
 	if (client.isRegistered()) {
-		client.appendToWriteBuffer(IRC::Reply::welcome(client.getNickname(), client.getUsername(), client.getHostname()) +
-			IRC::Reply::yourHost(client.getNickname()) +
-			IRC::Reply::created(client.getNickname(), serv.getCreationTime()) +
-			IRC::Reply::myInfo(client.getNickname()) +
-			IRC::Reply::isSupport(client.getNickname(), serv.getIsupportTokens()));
+		client.appendToWriteBuffer(IRC::Reply::welcome(client.getNickname(), client.getUsername(), client.getHostname()));
+		client.appendToWriteBuffer(IRC::Reply::yourHost(client.getNickname()));
+		client.appendToWriteBuffer(IRC::Reply::created(client.getNickname(), serv.getCreationTime()));
+		client.appendToWriteBuffer(IRC::Reply::myInfo(client.getNickname()));
+		client.appendToWriteBuffer(IRC::Reply::isSupport(client.getNickname(), serv.getIsupportTokens()));
 	}
 
 	return;

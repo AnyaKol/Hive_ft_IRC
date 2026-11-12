@@ -34,10 +34,10 @@ int main(int ac, char *av[]) {
 
 	Server  server(port, password);
 	try {
-		signal(SIGINT, Server::signalHandler);
-		signal(SIGQUIT, Server::signalHandler);
-		signal(SIGTERM, Server::signalHandler);
-		signal(SIGPIPE, SIG_IGN);
+		signal(SIGINT, Server::signalHandler); // Ctrl + 'C'
+		signal(SIGQUIT, Server::signalHandler); // Ctrl + '\'
+		signal(SIGTERM, Server::signalHandler); // Signal sent by kill <pid>
+		signal(SIGPIPE, SIG_IGN); // Ignore SIGPIPE to prevent server crash when writing to a closed socket
 		if (server.initServer()) {
 		std::cout << "Server initialized successfully, waiting for connections..\n";
 		server.runServer();

@@ -3,17 +3,16 @@
 
 #include <ranges>
 
-/*
-Finds channel with given name or creates new channel if no channel was found.
-Throws exception if error occured (if channel with this name exists).
+/* Finds channel with given name or creates new channel if no channel was found.
+ * Throws exception if error occured (if channel with this name exists).
 
-@param	const std::string_view		channelName	name of channel to find.
+ * @param	const std::string_view&	channelName		name of channel to find.
+ * @param	bool&					channelFound	flag if channel exists.
 
-@returns	Channel&	finds or creates an object of class Channel in the
-						server's unordered_map<std::string, Channel> and
-						returns a reference to it; if error occured - throws
-						exception with ERR_CREATE_CHANNEL message.
-*/
+ * @returns	Channel&	finds or creates an object of class Channel in the
+ * server's unordered_map<std::string, Channel> and returns a reference to it;
+ * if error occured - throws exception with ERR_CREATE_CHANNEL message.
+ */
 Channel&	AChannelCommand::findChannel(const std::string_view& channelName, bool& channelFound) {
 
 	auto it = this->allChannels.find(std::string(channelName));
@@ -32,8 +31,14 @@ Channel&	AChannelCommand::findChannel(const std::string_view& channelName, bool&
 	channelFound = false;
 	return (inserted.first->second);
 }
-std::vector<std::string_view>	AChannelCommand::splitByCommas( 
-	const std::string_view& paramWithCommas) {
+
+/* Separates given string by commas.
+
+ * @param	const std::string_view&	paramWithCommas	string with commas.
+
+ * @returns	std::vector<std::string_view>	result vector of strings.
+ */
+std::vector<std::string_view>	AChannelCommand::splitByCommas(const std::string_view& paramWithCommas) {
 
 	std::vector<std::string_view>	paramVector {};
 	auto range = std::ranges::views::split(paramWithCommas, ',');

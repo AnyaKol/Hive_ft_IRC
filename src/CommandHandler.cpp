@@ -13,11 +13,7 @@ void Commands::processCommand(Server& serv, Client& client, Parser& cmd) {
 	if (command == "PASS") { handlePass(serv, client, cmd); return; }
 	if (command == "NICK") { handleNick(serv, client, cmd); return; }
 	if (command == "USER") { handleUser(serv, client, cmd); return; }
-	if (command == "CAP") {
-		// Reply to CAP LS so clients like irssi finish negotiation and register immediately
-		client.appendToWriteBuffer("CAP * LS :\r\n");
-		return;
-	}
+	if (command == "CAP") { return; }
 
 
 	// If they are not registered, block all other commands
@@ -37,10 +33,14 @@ void Commands::processCommand(Server& serv, Client& client, Parser& cmd) {
 	if (command == "QUIT") { handleQuit(serv, client, cmd); return; }
 	if (command == "PRIVMSG") { handlePrivMsg(serv, client, cmd); return; }
 	if (command == "WHO") { return; } // irssi sends WHO on channel open: ignore silently
+	if (command == "WHOIS") {
+		std::string reply = IRC::Reply::endOfWhoIs(client.getNickname(), cmd.getParams()[0]);
+		client.appendToWriteBuffer(reply);
+		return;
+	} // irssi sends WHOIS if nickname is in use
 
 	// THE CATCH-ALL: Command not found
 	if (command == "UNKNOWN") {
-
 		std::string reply = IRC::Reply::errUnknownCommand(client.getNickname(), cmd.getCommand());
 		client.appendToWriteBuffer(reply);
 	}

@@ -104,7 +104,7 @@ void	Channel::addMember(Client& client, std::string_view key) {
 	this->_members.insert(&client);
 
 	if (this->_inviteOnly)
-		this->_pendingInvites.erase(this->_pendingInvites.find(client.getNickname()));//Remove from invites
+		this->_pendingInvites.erase(this->_pendingInvites.find(client.getNickname())); //Remove from invites
 }
 
 void	Channel::addOperator(Client& client) {

@@ -67,6 +67,7 @@ namespace IRC {
 		RPL_MYINFO		  = 4, //
 		RPL_ISUPPORT		= 5, // Tells the client channel prefixes (#, &) and mode limits.
 
+		RPL_ENDOFWHOIS		= 318, //Responce to WHOIS command.
 		RPL_CHANNELMODEIS	= 324, // Sent in response to MODE <channel> command, shows the current channel modes and their parameters.
 		RPL_CREATIONTIME	= 329, // Sent in response to WHOIS <nick> command, shows the channel creation time.
 		RPL_NOTOPIC		 = 331, // Sent in response to TOPIC <channel> command, indicates that the channel has no topic set.
@@ -168,6 +169,13 @@ namespace IRC {
 
 
 		// --- Channel Info & Actions ---
+		inline std::string endOfWhoIs(std::string_view nick, std::string_view targetNick)
+		{
+			static_assert(RPL_ENDOFWHOIS == 318, "318 literal must match RPL_ENDOFWHOIS");
+			return ":" + std::string(SERVER_NAME) + " 318 " + target(nick) + " " + std::string(targetNick) + " :End of /WHOIS list\r\n";
+		}
+
+
 		inline std::string channelModeIs(std::string_view nick, std::string_view channel, std::string_view modes, std::string_view params = "")
 		{
 			static_assert(RPL_CHANNELMODEIS == 324, "324 literal must match RPL_CHANNELMODEIS");
