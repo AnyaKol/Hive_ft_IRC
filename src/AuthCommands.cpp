@@ -64,11 +64,11 @@ void Commands::handleNick(Server& serv, Client& client, Parser& cmd) {
 	std::cout << "Client on socket " << client.getSocket() << " set nickname to: " << client.getNickname() << "\n";
 
 	if (!wasRegistered && client.isRegistered()) { // only print welcome to the user if they were not registred before
-		client.appendToWriteBuffer(IRC::Reply::welcome(client.getNickname(), client.getUsername(), client.getHostname()) +
-			IRC::Reply::yourHost(client.getNickname()) +
-			IRC::Reply::created(client.getNickname(), serv.getCreationTime()) +
-			IRC::Reply::myInfo(client.getNickname()) +
-			IRC::Reply::isSupport(client.getNickname(), serv.getIsupportTokens()));
+		client.appendToWriteBuffer(IRC::Reply::welcome(client.getNickname(), client.getUsername(), client.getHostname()));
+		//client.appendToWriteBuffer(IRC::Reply::yourHost(client.getNickname()));
+		//client.appendToWriteBuffer(IRC::Reply::created(client.getNickname(), serv.getCreationTime()));
+		//client.appendToWriteBuffer(IRC::Reply::myInfo(client.getNickname()));
+		//client.appendToWriteBuffer(IRC::Reply::isSupport(client.getNickname(), serv.getIsupportTokens()));
 	}
 	 else if (wasRegistered) {
 		// If they are already registered and changing their name, send the confirmation back to them! so irssi updates the interface
@@ -77,13 +77,14 @@ void Commands::handleNick(Server& serv, Client& client, Parser& cmd) {
 
 		// (Note: Later when you build Channels, you will also need to broadcast this 'reply' string
 		// to every other person in their channels so their screens update too!)
+
 	}
 
 	return;
 }
 
 // USER <username> <mode> <unused> <realname>
-void    Commands::handleUser(Server& serv, Client& client, Parser& cmd) {
+void	Commands::handleUser(Server& serv, Client& client, Parser& cmd) {
 
 	(void)serv;
 

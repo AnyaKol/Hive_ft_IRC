@@ -23,7 +23,6 @@ class Server {
 		std::string		_creationTime;   // RPL_CREATED (003)
 		std::string		_isupportTokens; // RPL_ISUPPORT (005)
 		std::string		_hostname;
-		std::ofstream	_serverLog; // record server events
 		static bool		_signal;
 
 		std::unordered_map<int, Client>						_clients;

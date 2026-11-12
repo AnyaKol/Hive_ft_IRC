@@ -134,7 +134,7 @@ namespace IRC {
 		{
 			static_assert(RPL_WELCOME == 1, "001 literal must match RPL_WELCOME");
 			return ":" + std::string(SERVER_NAME) + " 001 " + target(nick) +
-				" :Welcome to the IRC Network " + std::string(nick) + "!" + std::string(user) + "@" + std::string(host) + "\r\n";
+				" :Welcome to the IRC Network, " + std::string(nick) + "!" + std::string(user) + "@" + std::string(host) + "\r\n";
 		}
 
 		inline std::string yourHost(std::string_view nick)
