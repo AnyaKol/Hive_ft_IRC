@@ -30,7 +30,7 @@ User commands:
 | NICK | nickname | set user nickname |
 | USER | username mode unused realname | show user info |
 | QUIT | \[message\] | exit irssi |
-| MSG | target message | send private message |
+| PRIVMSG | target message | send private message |
 
 
 
@@ -42,7 +42,7 @@ Channel commands:
 | JOIN | channel\{"," channel\} \[key\{"," key\}\] | join channel |
 | KICK | channel user\{"," user\} \[comment\] | remove user from channel |
 | MODE | target \[modestring \[mode arguments\]\] | change channel modes |
-| NAMES | channel\{"," channel\} | show channel members |
+| NAMES | channel | show channel members |
 | PART | channel\{"," channel\} \[reason\] | leave channel |
 | TOPIC | channel \[topic\] | change channel topic |
 
