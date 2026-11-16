@@ -30,7 +30,7 @@ User commands:
 | NICK | nickname | set user nickname |
 | USER | username mode unused realname | show user info |
 | QUIT | \[message\] | exit irssi |
-| PRIVMSG | target message | send private message |
+| MSG | target message | send private message |
 
 
 
