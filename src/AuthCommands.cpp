@@ -67,10 +67,10 @@ void Commands::handleNick(Server& serv, Client& client, Parser& cmd) {
 
 	if (!wasRegistered && client.isRegistered()) { // only print welcome to the user if they were not registred before
 		client.appendToWriteBuffer(IRC::Reply::welcome(client.getNickname(), client.getUsername(), client.getHostname()));
-		//client.appendToWriteBuffer(IRC::Reply::yourHost(client.getNickname()));
-		//client.appendToWriteBuffer(IRC::Reply::created(client.getNickname(), serv.getCreationTime()));
-		//client.appendToWriteBuffer(IRC::Reply::myInfo(client.getNickname()));
-		//client.appendToWriteBuffer(IRC::Reply::isSupport(client.getNickname(), serv.getIsupportTokens()));
+		client.appendToWriteBuffer(IRC::Reply::yourHost(client.getNickname()));
+		client.appendToWriteBuffer(IRC::Reply::created(client.getNickname(), serv.getCreationTime()));
+		client.appendToWriteBuffer(IRC::Reply::myInfo(client.getNickname()));
+		client.appendToWriteBuffer(IRC::Reply::isSupport(client.getNickname(), serv.getIsupportTokens()));
 	}
 	 else if (wasRegistered) {
 		// If they are already registered and changing their name, send the confirmation back to them! so irssi updates the interface
