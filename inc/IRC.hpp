@@ -26,7 +26,7 @@ namespace IRC {
 	inline const std::string CHANTYPES			= "#"; // only regular channels
 	inline const std::string PREFIX				= "(o)@"; // membership prefix: operator
 	inline const std::string CASEMAPPING		= "rfc1459"; // names are ASCII case-insensitive plus `{}
-	inline const std::size_t TARGMAX_PRIVMSG	= 4;   // max comma-separated targets per PRIVMSG
+	inline const std::size_t TARGMAX_PRIVMSG	= 4; // max comma-separated targets per PRIVMSG
 	inline const std::string TARGMAX			= "NAMES:1,TOPIC:1,KICK:1,PRIVMSG=" + std::to_string(TARGMAX_PRIVMSG);
 
 	// Space-joined token list sent in RPL_ISUPPORT (005)

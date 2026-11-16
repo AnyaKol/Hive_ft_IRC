@@ -5,7 +5,6 @@
 #include <csignal>
 #include <cstdlib>
 
-
 int main(int ac, char *av[]) {
 
 	if (ac != 3) {
