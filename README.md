@@ -20,31 +20,34 @@ In another terminal window start **irssi client**:
 
 ## Supported commands
 
+\[ ... \] - optional parameters;
+\{"," ... \} - allows multiple comma-separated arguments (no spaces).
+
 User commands:
 
-| COMMAND | <parameters> | Usage |
+| COMMAND | Parameters | Usage |
 |:-------:|:-------------|:------|
-| NICK | \<nickname\> | set user nickname |
-| PASS | \<password\> | provide password |
-| USER | \<username\> \<mode\> \<unused\> \<realname\> | show user info |
-| PING | \<token\> | ping |
-| PONG | \<token\> | pong |
+| NICK | nickname | set user nickname |
+| PASS | password | provide password |
+| USER | username mode unused realname | show user info |
+| PING | token | ping |
+| PONG | token | pong |
 | QUIT | \[message\] | exit irssi |
-| PRIVMSG | \<target\> \<message\> | send private message |
+| PRIVMSG | target message | send private message |
 
 
 
 Channel commands:
 
-| COMMAND | <parameters> | Usage |
+| COMMAND | Parameters | Usage |
 |:-------:|:-------------|:------|
-| INVITE | \<nickname\> \<channel\> | invite user to channel |
-| JOIN | \<channel\>\{,\<channel\>\} \[\<key\>\{,\<key\>\}\] | join channel |
-| KICK | \<channel\> \<user\> *( "," \<user\> ) \[\<comment\>\] | remove user from channel |
-| MODE | \<target\> \[\<modestring\> \[\<mode arguments\>...\]\] | change channel modes |
-| NAMES | \<channel\>\{"," \<channel\>\} | show channel members |
-| PART | \<channel\>\{"," \<channel\>\} \[\<reason\>\] | leave channel |
-| TOPIC | \<channel\> \[\<topic\>\] | change channel topic |
+| INVITE | nickname channel | invite user to channel |
+| JOIN | channel\{"," channel\} \[key\{"," key\}\] | join channel |
+| KICK | channel user\{"," user\} \[comment\] | remove user from channel |
+| MODE | target \[modestring \[mode arguments\]\] | change channel modes |
+| NAMES | channel\{"," channel\} | show channel members |
+| PART | channel\{"," channel\} \[reason\] | leave channel |
+| TOPIC | channel \[topic\] | change channel topic |
 
 
 
