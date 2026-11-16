@@ -25,13 +25,10 @@ In another terminal window start **irssi client**:
 
 User commands:
 
-| COMMAND | Parameters | Usage |
+| Command | Parameters | Usage |
 |:-------:|:-------------|:------|
 | NICK | nickname | set user nickname |
-| PASS | password | provide password |
 | USER | username mode unused realname | show user info |
-| PING | token | ping |
-| PONG | token | pong |
 | QUIT | \[message\] | exit irssi |
 | PRIVMSG | target message | send private message |
 
@@ -39,7 +36,7 @@ User commands:
 
 Channel commands:
 
-| COMMAND | Parameters | Usage |
+| Command | Parameters | Usage |
 |:-------:|:-------------|:------|
 | INVITE | nickname channel | invite user to channel |
 | JOIN | channel\{"," channel\} \[key\{"," key\}\] | join channel |
