@@ -10,12 +10,12 @@ This is a Hive school group project about creating IRC server for irssi client.
 Open in terminal folder with the project and run:
 
 > make
-> ./ircserv <port> <password>
+> .\/ircserv port password
 
 In another terminal window start **irssi client**:
 
 > irssi
-> /connect localhost <port> <password>
+> \/connect localhost port password
 
 
 ## Supported commands
