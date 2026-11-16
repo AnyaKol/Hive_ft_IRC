@@ -7,17 +7,29 @@ This is a Hive school group project about creating IRC server for irssi client.
 
 ## To start the project
 
-Open in terminal folder with the project and run:
+To start the server open in terminal folder with the project and run:
 
 > make
 
 > .\/ircserv \<port\> \<password\>
 
-In another terminal window start **irssi client**:
+
+To connect with **irssi client** in another terminal window run:
 
 > irssi
 
 > \/connect localhost \<port\> \<password\>
+
+
+To connect with netcat in another terminal window run:
+
+> nc -C localhost \<port\>
+
+> pass \<password\>
+
+> nick \<nickname\>
+
+> user \<username\> 0 * : \<real_name\> 
 
 
 ## Supported commands
@@ -35,7 +47,6 @@ User commands:
 | PRIVMSG | target message | send private message |
 
 
-
 Channel commands:
 
 | Command | Parameters | Usage |
@@ -47,7 +58,6 @@ Channel commands:
 | NAMES | channel | show channel members |
 | PART | channel\{"," channel\} \[reason\] | leave channel |
 | TOPIC | channel \[topic\] | change channel topic |
-
 
 
 Channel modes:
